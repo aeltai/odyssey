@@ -152,6 +152,51 @@ func TestParseFile_QueryField(t *testing.T) {
 	}
 }
 
+func TestParseFile_DatasourceFilter(t *testing.T) {
+	j := `{
+		"title": "Mixed",
+		"panels": [
+			{
+				"title": "Prom",
+				"type": "timeseries",
+				"targets": [{"expr": "rate(up[5m])"}]
+			},
+			{
+				"title": "Loki",
+				"type": "timeseries",
+				"targets": [{"expr": "invalid", "datasource": {"type": "loki", "uid": "l1"}}]
+			},
+			{
+				"title": "PromExplicit",
+				"type": "timeseries",
+				"targets": [{"expr": "sum(up)", "datasource": {"type": "prometheus", "uid": "p1"}}]
+			}
+		]
+	}`
+	path := writeTmp(t, j)
+	_, panels, err := ParseFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Only Prom and PromExplicit — Loki target skipped
+	if len(panels) != 2 {
+		t.Fatalf("got %d panels, want 2 (Loki should be excluded)", len(panels))
+	}
+	exprs := []string{panels[0].Expr, panels[1].Expr}
+	if !contains(exprs, "rate(up[5m])") || !contains(exprs, "sum(up)") {
+		t.Errorf("unexpected exprs: %v", exprs)
+	}
+}
+
+func contains(s []string, x string) bool {
+	for _, v := range s {
+		if v == x {
+			return true
+		}
+	}
+	return false
+}
+
 func TestParseFile_EmptyPanels(t *testing.T) {
 	j := `{"title": "Empty", "panels": []}`
 	path := writeTmp(t, j)

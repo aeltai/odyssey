@@ -23,8 +23,9 @@ type rawPanel struct {
 }
 
 type rawTarget struct {
-	Expr  string `json:"expr"`
-	Query string `json:"query"`
+	Expr       string          `json:"expr"`
+	Query      string          `json:"query"`
+	Datasource json.RawMessage `json:"datasource"`
 }
 
 type rawOptions struct {
@@ -112,6 +113,9 @@ func extractExprs(p rawPanel) []string {
 	}
 
 	for _, t := range p.Targets {
+		if !isPrometheusDatasource(t.Datasource) {
+			continue
+		}
 		add(t.Expr)
 		if t.Expr == "" {
 			add(t.Query)
@@ -128,4 +132,27 @@ func extractExprs(p rawPanel) []string {
 	}
 
 	return exprs
+}
+
+// isPrometheusDatasource returns false if datasource is explicitly non-Prometheus.
+// Returns true for null, empty, or Prometheus (incl. by uid when type unknown).
+func isPrometheusDatasource(ds json.RawMessage) bool {
+	if len(ds) == 0 {
+		return true // null or omitted — use default (often Prometheus)
+	}
+	// Try to parse as object: {"type":"prometheus",...} or {"type":"loki",...}
+	var m map[string]interface{}
+	if err := json.Unmarshal(ds, &m); err != nil {
+		// String datasource like "Prometheus" or uid "abc123"
+		var s string
+		if err := json.Unmarshal(ds, &s); err != nil {
+			return true // Unknown format — include to be safe
+		}
+		return s == "" || strings.EqualFold(s, "prometheus")
+	}
+	t, _ := m["type"].(string)
+	if t == "" {
+		return true
+	}
+	return strings.EqualFold(t, "prometheus")
 }

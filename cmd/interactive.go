@@ -144,7 +144,7 @@ func runInteractive() error {
 	}
 	fmt.Printf("  STS reports %s\n\n", successStyle.Render(fmt.Sprintf("%d metrics", len(metricIdx.Exact))))
 
-	enriched := engine.SanitiseAndExtract(panels, os.Stderr)
+	enriched := engine.SanitiseAndExtract(panels, "5m", os.Stderr)
 	results, detectedPrefix := engine.MatchPanels(enriched, metricIdx)
 	matched, missing := engine.CountResults(results)
 

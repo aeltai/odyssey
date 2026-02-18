@@ -22,6 +22,7 @@ type Options struct {
 	CheckOnly      bool
 	RewriteMetrics bool
 	DashID         int64
+	Interval       string // PromQL interval for rate/irate (e.g. 5m). Default "5m".
 }
 
 // Result holds the outcome of a conversion run.
@@ -59,11 +60,14 @@ func ParseInputs(paths []string) ([]grafana.Panel, string, error) {
 }
 
 // SanitiseAndExtract sanitises expressions and extracts metric names.
-// Warnings are written to w.
-func SanitiseAndExtract(panels []grafana.Panel, w io.Writer) []EnrichedPanel {
+// Warnings are written to w. interval is used for $__interval, $__range_s etc. (default "5m").
+func SanitiseAndExtract(panels []grafana.Panel, interval string, w io.Writer) []EnrichedPanel {
+	if interval == "" {
+		interval = "5m"
+	}
 	out := make([]EnrichedPanel, 0, len(panels))
 	for _, p := range panels {
-		san := sts.SanitizePromQL(p.Expr)
+		san := sts.SanitizePromQL(p.Expr, interval)
 		names, err := promql.ExtractMetricNames(san)
 		ep := EnrichedPanel{Panel: p, Sanitized: san}
 		if err != nil {
@@ -156,7 +160,11 @@ func Run(opts Options, w io.Writer) (*Result, error) {
 		return &Result{}, nil
 	}
 
-	enriched := SanitiseAndExtract(panels, w)
+	interval := opts.Interval
+	if interval == "" {
+		interval = "5m"
+	}
+	enriched := SanitiseAndExtract(panels, interval, w)
 
 	stsCfg, err := sts.LoadConfig(opts.STSURL, opts.STSToken)
 	if err != nil {

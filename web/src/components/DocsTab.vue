@@ -18,6 +18,7 @@ const sanitizationRules = [
   { name: 'Rate interval', before: 'rate(http_requests_total[$__rate_interval])', after: 'rate(http_requests_total[5m])' },
   { name: 'Interval', before: 'increase(errors_total[${__interval}])', after: 'increase(errors_total[5m])' },
   { name: 'Range variable', before: 'avg_over_time(cpu_usage[$interval])', after: 'avg_over_time(cpu_usage[5m])' },
+  { name: '$__range_s', before: 'increase(errors[$__range_s])', after: 'increase(errors[300])' },
   { name: 'Variable label filter', before: 'up{job=~"$job", namespace="$namespace"}', after: 'up' },
   { name: 'Mixed labels', before: 'rate(http_total{method="GET", job=~"$job"}[5m])', after: 'rate(http_total{method="GET"}[5m])' },
   { name: 'Dangling comma', before: 'node_memory{, instance="a"}', after: 'node_memory{instance="a"}' },
@@ -53,7 +54,7 @@ const parsingFeatures = [
 
 const pipelineSteps = [
   { color: 'orange', title: 'Parse', desc: 'Grafana JSON is parsed recursively. Every PromQL expression is extracted from panels, nested rows, collapsed panels, and Grafana 8+ options.queries[]. Legacy rows[] are also supported.' },
-  { color: 'emerald', title: 'Sanitise', desc: 'Grafana-specific template variables ($__rate_interval, $__interval, $job, $node, etc.) are replaced or removed. Function names are lowercased to match Prometheus conventions.' },
+  { color: 'emerald', title: 'Sanitise', desc: 'Grafana-specific template variables ($__rate_interval, $__interval, $__range_s, $job, $node, etc.) are replaced with your chosen interval (default 5m) or removed. Function names are lowercased to match Prometheus conventions.' },
   { color: 'blue', title: 'Validate', desc: 'Extracted metric names are checked against the SUSE Observability Prometheus API. Prefix detection identifies if your metrics have a namespace prefix (e.g. postgresql_ or mysql_). Counter _total suffixes are handled transparently.' },
   { color: 'teal', title: 'Generate', desc: 'A valid STS dashboard YAML is produced with a Grid layout, TimeSeriesChart panels, PrometheusTimeSeriesQuery queries, and proper panel IDs. The YAML can be applied directly or downloaded.' },
 ]
@@ -82,6 +83,7 @@ const cliCommands = [
       { flag: '--sts-token', desc: 'SUSE Observability API token' },
       { flag: '-o, --output', desc: 'Output YAML file path (default: <input>.sts.yaml)' },
       { flag: '--name', desc: 'Dashboard name in STS' },
+      { flag: '--interval', desc: 'PromQL interval for rate/irate (default: 5m; e.g. 1m, 15m, 1h)' },
       { flag: '--include-missing', desc: 'Include panels whose metrics are not in STS' },
       { flag: '--no-rewrite', desc: "Don't rewrite metric names with detected prefix" },
     ],
@@ -107,7 +109,11 @@ const cliCommands = [
     name: 'odyssey check',
     desc: 'Check metric availability without generating YAML. Useful for a quick audit.',
     usage: 'odyssey check -i dashboard.json --sts-url URL --sts-token TOKEN',
-    flags: [],
+    flags: [
+      { flag: '--sts-url', desc: 'SUSE Observability base URL' },
+      { flag: '--sts-token', desc: 'SUSE Observability API token' },
+      { flag: '--interval', desc: 'PromQL interval for rate/irate (default: 5m)' },
+    ],
   },
   {
     name: 'odyssey server',
@@ -211,9 +217,15 @@ function scrollTo(id) {
           <h2 class="text-2xl font-bold text-white mb-4">PromQL Sanitization</h2>
           <div class="prose-custom">
             <p>
-              Grafana dashboards use template variables (<code>$__rate_interval</code>, <code>$job</code>,
-              <code>$namespace</code>) that don't exist in SUSE Observability. Odyssey applies several
-              transformations to make the PromQL valid.
+              Grafana dashboards use template variables (<code>$__rate_interval</code>, <code>$__interval</code>,
+              <code>$__range_s</code>, <code>$job</code>, <code>$namespace</code>) that don't exist in SUSE Observability.
+              Odyssey applies several transformations to make the PromQL valid.
+            </p>
+            <p>
+              <strong>Configurable interval</strong> — You can choose the replacement value for range variables.
+              In the web UI, use the "PromQL Interval" dropdown in Configure (1m, 5m, 15m, 1h). In the CLI,
+              use <code>--interval 5m</code>. Default is <code>5m</code>, which suits typical Prometheus scrape
+              intervals (15s–1m).
             </p>
           </div>
 
@@ -242,7 +254,8 @@ function scrollTo(id) {
             <p>Any Grafana template variable used inside a <strong>label selector</strong> is removed entirely.
               This covers <code>$job</code>, <code>$namespace</code>, <code>$node</code>, <code>$instance</code>,
               and any custom variables. Variables inside <strong>range brackets</strong> (<code>[$var]</code>) are
-              replaced with <code>[5m]</code>.</p>
+              replaced with your chosen interval (default <code>5m</code>). <code>$__range_s</code> is replaced
+              with the interval in seconds (e.g. 300 for 5m, 60 for 1m).</p>
           </div>
 
           <h3 class="text-lg font-semibold text-slate-200 mt-8 mb-3">Full Example</h3>

@@ -62,7 +62,7 @@ async function parseOnly() {
     const resp = await fetch('/api/parse', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(props.dashboards[0]),
+      body: JSON.stringify({ ...props.dashboards[0], interval: props.config.interval || '5m' }),
     })
     const data = await resp.json()
     if (!resp.ok) throw new Error(data.error)
@@ -84,6 +84,7 @@ async function checkMetrics() {
         dashboards: props.dashboards,
         stsUrl: props.config.stsUrl,
         stsToken: props.config.stsToken,
+        interval: props.config.interval || '5m',
       }),
     })
     const data = await resp.json()

@@ -35,6 +35,7 @@ async function convert() {
         stsToken: props.config.stsToken,
         name: props.config.name,
         metricPrefix: props.config.metricPrefix,
+        interval: props.config.interval || '5m',
         rewriteMetrics: props.config.rewriteMetrics,
         includeMissing: props.config.includeMissing,
       }),

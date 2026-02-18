@@ -29,12 +29,30 @@ func TestSanitizePromQL(t *testing.T) {
 		{"bare ${interval} in range", `rate(x[${interval}])`, `rate(x[5m])`},
 		{"$interval with or fallback", `rate(x[$interval]) or irate(x[5m])`, `rate(x[5m]) or irate(x[5m])`},
 		{"$__range variable", `max_over_time(x[$__range])`, `max_over_time(x[5m])`},
+		{"$__range_s variable", `increase(x[$__range_s])`, `increase(x[300])`},
+		{"${__range} variable", `rate(x[${__range}])`, `rate(x[5m])`},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := SanitizePromQL(tt.input)
+			got := SanitizePromQL(tt.input, "5m")
 			if got != tt.expect {
 				t.Errorf("SanitizePromQL(%q)\n  got  %q\n  want %q", tt.input, got, tt.expect)
+			}
+		})
+	}
+	// Custom interval (1m instead of default 5m)
+	for _, tt := range []struct {
+		name   string
+		input  string
+		expect string
+	}{
+		{"custom 1m", `rate(x[$__interval])`, `rate(x[1m])`},
+		{"custom $__range_s 1m", `increase(x[$__range_s])`, `increase(x[60])`},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			got := SanitizePromQL(tt.input, "1m")
+			if got != tt.expect {
+				t.Errorf("SanitizePromQL(%q, \"1m\")\n  got  %q\n  want %q", tt.input, got, tt.expect)
 			}
 		})
 	}

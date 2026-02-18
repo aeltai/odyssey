@@ -8,6 +8,7 @@ const stsUrl = ref(props.config.stsUrl || '')
 const stsToken = ref(props.config.stsToken || '')
 const name = ref(props.config.name || props.parseResult?.title || '')
 const metricPrefix = ref(props.config.metricPrefix || '')
+const interval = ref(props.config.interval || '5m')
 const rewriteMetrics = ref(props.config.rewriteMetrics ?? true)
 const includeMissing = ref(props.config.includeMissing ?? false)
 const showToken = ref(false)
@@ -18,6 +19,7 @@ function proceed() {
     stsToken: stsToken.value,
     name: name.value,
     metricPrefix: metricPrefix.value,
+    interval: interval.value || '5m',
     rewriteMetrics: rewriteMetrics.value,
     includeMissing: includeMissing.value,
   })
@@ -109,6 +111,19 @@ const metricCount = new Set(props.parseResult?.panels?.flatMap(p => p.metrics ||
             class="w-full bg-slate-900/80 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition"
           />
           <p class="text-[10px] text-slate-600 mt-1">This will be the dashboard name in SUSE Observability</p>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1.5">PromQL Interval</label>
+          <select
+            v-model="interval"
+            class="w-full bg-slate-900/80 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition"
+          >
+            <option value="1m">1m</option>
+            <option value="5m">5m (recommended)</option>
+            <option value="15m">15m</option>
+            <option value="1h">1h</option>
+          </select>
+          <p class="text-[10px] text-slate-600 mt-1">Replaces Grafana variables like <code class="text-slate-500">$__rate_interval</code>, <code class="text-slate-500">$__interval</code>. Use 5m for typical scrape intervals (15s–1m).</p>
         </div>
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1.5">Metric Prefix Override</label>

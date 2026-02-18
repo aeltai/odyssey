@@ -19,6 +19,7 @@ var convertFlags struct {
 	includeMissing bool
 	rewriteMetrics bool
 	dashID         int64
+	interval       string
 }
 
 var convertCmd = &cobra.Command{
@@ -44,6 +45,7 @@ STS dashboard YAML file.`,
 			IncludeMissing: convertFlags.includeMissing,
 			RewriteMetrics: convertFlags.rewriteMetrics,
 			DashID:         convertFlags.dashID,
+			Interval:       convertFlags.interval,
 		}
 		_, err := engine.Run(opts, os.Stderr)
 		if err != nil {
@@ -63,4 +65,5 @@ func init() {
 	f.BoolVar(&convertFlags.includeMissing, "include-missing", false, "Include panels with missing metrics")
 	f.BoolVar(&convertFlags.rewriteMetrics, "rewrite-metrics", true, "Rewrite metric names to match STS prefix")
 	f.Int64Var(&convertFlags.dashID, "id", 0, "Existing STS dashboard ID (for updates)")
+	f.StringVar(&convertFlags.interval, "interval", "5m", "PromQL interval for rate/irate (e.g. 5m, 1m, 15m)")
 }

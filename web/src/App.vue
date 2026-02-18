@@ -16,6 +16,7 @@ const config = ref({
   stsToken: '',
   name: '',
   metricPrefix: '',
+  interval: '5m',
   rewriteMetrics: true,
   includeMissing: false,
 })
@@ -85,7 +86,7 @@ function reset() {
   checkResult.value = null
   convertResult.value = null
   logs.value = []
-  config.value = { stsUrl: '', stsToken: '', name: '', metricPrefix: '', rewriteMetrics: true, includeMissing: false }
+  config.value = { stsUrl: '', stsToken: '', name: '', metricPrefix: '', interval: '5m', rewriteMetrics: true, includeMissing: false }
 }
 </script>
 
@@ -206,6 +207,7 @@ function reset() {
           <!-- Feature pills -->
           <div class="flex flex-wrap items-center justify-center gap-3 text-xs">
             <span class="px-3 py-1.5 rounded-full bg-slate-800/50 ring-1 ring-slate-700/40 text-slate-400">PromQL Sanitization</span>
+            <span class="px-3 py-1.5 rounded-full bg-slate-800/50 ring-1 ring-slate-700/40 text-slate-400">Configurable Interval</span>
             <span class="px-3 py-1.5 rounded-full bg-slate-800/50 ring-1 ring-slate-700/40 text-slate-400">Metric Prefix Detection</span>
             <span class="px-3 py-1.5 rounded-full bg-slate-800/50 ring-1 ring-slate-700/40 text-slate-400">_total Suffix Handling</span>
             <span class="px-3 py-1.5 rounded-full bg-slate-800/50 ring-1 ring-slate-700/40 text-slate-400">Variable Replacement</span>
@@ -298,7 +300,7 @@ function reset() {
                     <div class="w-5 h-5 rounded bg-emerald-500/15 flex items-center justify-center flex-shrink-0 mt-0.5">
                       <span class="text-[10px] font-bold text-emerald-400">2</span>
                     </div>
-                    <p class="text-xs text-slate-500">Variables like <code class="text-slate-400">$__rate_interval</code> are replaced with safe defaults</p>
+                    <p class="text-xs text-slate-500">Variables like <code class="text-slate-400">$__rate_interval</code> are replaced with your chosen interval (default 5m)</p>
                   </div>
                   <div class="flex gap-2.5">
                     <div class="w-5 h-5 rounded bg-blue-500/15 flex items-center justify-center flex-shrink-0 mt-0.5">

@@ -11,6 +11,7 @@ import (
 var checkFlags struct {
 	stsURL   string
 	stsToken string
+	interval string
 }
 
 var checkCmd = &cobra.Command{
@@ -25,6 +26,7 @@ available in the connected SUSE Observability instance. No YAML is generated.`,
 			CheckOnly: true,
 			STSURL:   checkFlags.stsURL,
 			STSToken: checkFlags.stsToken,
+			Interval: checkFlags.interval,
 		}
 		result, err := engine.Run(opts, os.Stderr)
 		if err != nil {
@@ -41,4 +43,5 @@ func init() {
 	f := checkCmd.Flags()
 	f.StringVar(&checkFlags.stsURL, "sts-url", "", "SUSE Observability base URL")
 	f.StringVar(&checkFlags.stsToken, "sts-token", "", "SUSE Observability API token")
+	f.StringVar(&checkFlags.interval, "interval", "5m", "PromQL interval for rate/irate (e.g. 5m, 1m, 15m)")
 }

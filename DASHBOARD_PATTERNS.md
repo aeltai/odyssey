@@ -6,8 +6,9 @@ Reference for anyone adding new dashboards to Odyssey or fine-tuning conversions
 
 | Pattern | Example | What Odyssey does |
 |---------|---------|-------------------|
-| Built-in time variables | `[$__rate_interval]`, `[${__interval}]` | Replaced with `[5m]` |
-| Custom interval variables | `[$interval]`, `[$resolution]`, `[$__range]` | Replaced with `[5m]` |
+| Built-in time variables | `[$__rate_interval]`, `[${__interval}]`, `[$__range]` | Replaced with your chosen interval (default `[5m]`) |
+| Custom interval variables | `[$interval]`, `[$resolution]`, `[$__range_s]` | `[$var]` → `[interval]`; `$__range_s` → seconds (e.g. 300 for 5m) |
+| Datasource filtering | Targets with `datasource: {type: "loki"}` etc. | Skipped (only Prometheus panels converted) |
 | Variable label selectors | `instance="$host"`, `job=~"$job"` | Removed entirely |
 | Regex variable selectors | `instance=~"^$Node$"`, `pod=~"$pod.*"` | Removed entirely |
 | Chained variables | `instance=~"$host:$port"` | Removed entirely |
@@ -65,7 +66,7 @@ Reference for anyone adding new dashboards to Odyssey or fine-tuning conversions
 
 **Symptoms**: Parse errors like `bad number or duration syntax: ""`.
 
-**Fix**: Odyssey handles this automatically since v4abd4fb. All `[$variable]` patterns are now replaced with `[5m]`.
+**Fix**: Odyssey handles this automatically. All `[$variable]` patterns are replaced with your chosen interval (default 5m). Use `--interval 1m` (CLI) or the PromQL Interval dropdown (web UI) to change it.
 
 ### 5. Dashboard uses non-Prometheus datasource
 

@@ -18,6 +18,7 @@ import (
 type ParseRequest struct {
 	Filename string          `json:"filename"`
 	Content  json.RawMessage `json:"content"`
+	Interval string          `json:"interval"` // PromQL interval (e.g. 5m). Default "5m".
 }
 
 type ParseResponse struct {
@@ -39,6 +40,7 @@ type CheckRequest struct {
 	Dashboards []ParseRequest `json:"dashboards"`
 	STSURL     string         `json:"stsUrl"`
 	STSToken   string         `json:"stsToken"`
+	Interval   string         `json:"interval"` // PromQL interval (e.g. 5m). Default "5m".
 }
 
 type CheckResponse struct {
@@ -57,6 +59,7 @@ type ConvertRequest struct {
 	MetricPrefix   string         `json:"metricPrefix"`
 	RewriteMetrics bool           `json:"rewriteMetrics"`
 	IncludeMissing bool           `json:"includeMissing"`
+	Interval       string         `json:"interval"` // PromQL interval (e.g. 5m). Default "5m".
 }
 
 type ConvertResponse struct {
@@ -141,8 +144,12 @@ func handleParse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	interval := req.Interval
+	if interval == "" {
+		interval = "5m"
+	}
 	var buf bytes.Buffer
-	enriched := engine.SanitiseAndExtract(panels, &buf)
+	enriched := engine.SanitiseAndExtract(panels, interval, &buf)
 
 	results := make([]PanelResult, 0, len(enriched))
 	for _, ep := range enriched {
@@ -178,8 +185,12 @@ func handleCheck(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	interval := req.Interval
+	if interval == "" {
+		interval = "5m"
+	}
 	var buf bytes.Buffer
-	enriched := engine.SanitiseAndExtract(panels, &buf)
+	enriched := engine.SanitiseAndExtract(panels, interval, &buf)
 
 	stsCfg, err := sts.LoadConfig(req.STSURL, req.STSToken)
 	if err != nil {
@@ -237,8 +248,12 @@ func handleConvert(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	interval := req.Interval
+	if interval == "" {
+		interval = "5m"
+	}
 	var buf bytes.Buffer
-	enriched := engine.SanitiseAndExtract(panels, &buf)
+	enriched := engine.SanitiseAndExtract(panels, interval, &buf)
 
 	var matchResults []engine.MatchResult
 	var detectedPrefix string

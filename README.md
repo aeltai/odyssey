@@ -14,6 +14,7 @@ Convert Grafana dashboards to [SUSE Observability](https://www.suse.com/products
 - **Non-interactive CLI** — `odyssey convert` and `odyssey check` for scripting and CI
 - Handles all common Grafana JSON layouts: `panels[]`, `rows[]`, nested panels, `targets[].expr`, and `options.queries[]`
 - Sanitises Grafana-specific PromQL: template variables, time-range variables, uppercase functions
+- **Configurable interval** — replace `$__rate_interval`, `$__interval`, `$__range_s` with your chosen duration (default 5m; use `--interval` or web UI)
 - Auto-detects metric namespace prefixes (e.g. `pg_up` → `postgresql_pg_up`) and rewrites queries
 - Merges multiple Grafana JSON files into a single STS dashboard
 - `check` mode prints a per-panel metric-availability report
@@ -91,6 +92,7 @@ odyssey convert [flags] <dashboard.json> [more.json ...]
 |------|---------|-------------|
 | `-o`, `--output` | `<input>.sts.yaml` | Output YAML file path |
 | `--name` | from Grafana title | Dashboard name in STS |
+| `--interval` | `5m` | PromQL interval for rate/irate (e.g. 1m, 5m, 15m, 1h) |
 | `--include-missing` | `false` | Include panels with missing metrics |
 | `--rewrite-metrics` | `true` | Rewrite queries with detected prefix |
 | `--metric-prefix` | auto-detected | Override the namespace prefix |
@@ -108,6 +110,7 @@ odyssey check [flags] <dashboard.json> [more.json ...]
 |------|---------|-------------|
 | `--sts-url` | | SUSE Observability base URL |
 | `--sts-token` | | SUSE Observability API token |
+| `--interval` | `5m` | PromQL interval for rate/irate (e.g. 1m, 5m, 15m, 1h) |
 
 ### `odyssey server`
 
@@ -152,7 +155,7 @@ The STS connection is resolved in priority order:
 ```
 
 1. **Parse** — Walk all Grafana panels (including rows, nested panels) and extract every PromQL expression
-2. **Sanitise** — Remove Grafana template-variable label selectors, replace `$__rate_interval` / `$__interval` with `5m`, lowercase function names
+2. **Sanitise** — Remove Grafana template-variable label selectors, replace `$__rate_interval` / `$__interval` / `$__range_s` with your chosen interval (default 5m), lowercase function names
 3. **Extract** — Use the Prometheus PromQL parser to identify all metric names
 4. **Fetch** — Call `GET {url}/prometheus/api/v1/label/__name__/values` to get available STS metrics
 5. **Match** — Check each panel's metrics with prefix-aware suffix matching
@@ -163,11 +166,13 @@ The STS connection is resolved in priority order:
 
 | Grafana pattern | Replacement |
 |----------------|-------------|
-| `$__rate_interval` | `5m` |
-| `$__interval` | `5m` |
+| `$__rate_interval`, `$__interval`, `$__range` | Your chosen interval (default `5m`) |
+| `$__range_s` | Seconds derived from interval (e.g. 300 for 5m) |
 | `label="$variable"` | *(removed)* |
 | `label=~"$variable"` | *(removed)* |
 | `SUM(...)`, `AVG(...)` | `sum(...)`, `avg(...)` |
+
+Use `--interval 1m` (CLI) or the interval selector (web UI) to change the default.
 
 ## Verified dashboards
 

@@ -2,7 +2,9 @@ package sts
 
 import (
 	"regexp"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // rangeVarPattern matches $variable or ${variable} used inside range vector brackets [...]
@@ -19,20 +21,32 @@ var uppercaseFunc = regexp.MustCompile(`\b(SUM|AVG|MIN|MAX|COUNT|RATE|IRATE|INCR
 
 // SanitizePromQL makes a Grafana PromQL expression compatible with SUSE Observability.
 //
-//   - Replaces $__rate_interval / $__interval with 5m
+//   - Replaces $__rate_interval / $__interval with the given interval (default "5m")
 //   - Removes label selectors that reference Grafana $variables
 //   - Lowercases uppercase PromQL function names
-func SanitizePromQL(expr string) string {
+//
+// If interval is empty, "5m" is used. Supports Prometheus duration: 1m, 5m, 15m, 1h, etc.
+func SanitizePromQL(expr string, interval string) string {
 	if expr == "" {
 		return expr
 	}
-	expr = strings.ReplaceAll(expr, "$__rate_interval", "5m")
-	expr = strings.ReplaceAll(expr, "$__interval", "5m")
-	expr = strings.ReplaceAll(expr, "${__rate_interval}", "5m")
-	expr = strings.ReplaceAll(expr, "${__interval}", "5m")
+	if interval == "" {
+		interval = "5m"
+	}
+	rangeSec := intervalToSeconds(interval)
 
-	// Replace remaining $variable references inside range brackets: [$interval] -> [5m]
-	expr = rangeVarPattern.ReplaceAllString(expr, "[5m]")
+	// Replace longer names first ($__range_s before $__range)
+	expr = strings.ReplaceAll(expr, "$__rate_interval", interval)
+	expr = strings.ReplaceAll(expr, "$__interval", interval)
+	expr = strings.ReplaceAll(expr, "${__rate_interval}", interval)
+	expr = strings.ReplaceAll(expr, "${__interval}", interval)
+	expr = strings.ReplaceAll(expr, "$__range_s", strconv.Itoa(rangeSec))
+	expr = strings.ReplaceAll(expr, "${__range_s}", strconv.Itoa(rangeSec))
+	expr = strings.ReplaceAll(expr, "$__range", interval)
+	expr = strings.ReplaceAll(expr, "${__range}", interval)
+
+	// Replace remaining $variable references inside range brackets: [$interval] -> [interval]
+	expr = rangeVarPattern.ReplaceAllString(expr, "["+interval+"]")
 
 	expr = varLabelFilter.ReplaceAllString(expr, "")
 	expr = danglingComma.ReplaceAllString(expr, "{")
@@ -41,6 +55,16 @@ func SanitizePromQL(expr string) string {
 
 	expr = uppercaseFunc.ReplaceAllStringFunc(expr, strings.ToLower)
 	return expr
+}
+
+// intervalToSeconds parses Prometheus-style duration (e.g. 5m, 1h) and returns seconds.
+// Falls back to 300 (5m) on parse error.
+func intervalToSeconds(interval string) int {
+	d, err := time.ParseDuration(interval)
+	if err != nil {
+		return 300
+	}
+	return int(d.Seconds())
 }
 
 // RewriteMetricPrefix replaces bare metric names in a PromQL expression with

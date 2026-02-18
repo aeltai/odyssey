@@ -147,53 +147,65 @@ The STS connection is resolved in priority order:
 | `label=~"$variable"` | *(removed)* |
 | `SUM(...)`, `AVG(...)` | `sum(...)`, `avg(...)` |
 
-## Tested dashboards
+## Verified dashboards
 
-| Dashboard | Grafana ID | Panels |
-|-----------|-----------|--------|
-| PostgreSQL | 9628 | 40 |
-| NGINX | 12708 | 8 |
-| MySQL Overview | 14031 | 25 |
-| Kubewarden | 15314 | 24 |
-| Kubernetes Cluster | 315 | 33 |
+Dashboards in [`examples/`](examples/) have been deployed to a live SUSE Observability instance and verified end-to-end.
+
+| Dashboard | Grafana ID | Panels | Verified | Notes |
+|-----------|-----------|--------|----------|-------|
+| PostgreSQL | [9628](https://grafana.com/grafana/dashboards/9628) | 40 (34 live) | Yes | Prefix `postgresql` auto-rewritten |
+| NGINX Ingress | [12708](https://grafana.com/grafana/dashboards/12708) | 8 (8 live) | Yes | 100% coverage |
+| MySQL Overview | [14031](https://grafana.com/grafana/dashboards/14031) | 25 (21 live) | Yes | 4 use deprecated MySQL 8.0 metrics |
+| Kubewarden | [15760](https://grafana.com/grafana/dashboards/15760) | 24 | Yes | Requires Kubewarden metrics |
+
+### Integration-tested dashboards (47)
+
+The full test suite validates parsing, sanitisation, and YAML generation against the **top 47 Grafana dashboards** (1,551 panels total). Run with `make test-integration`.
 
 ## Development
 
 ```bash
-make test       # run tests with race detector
-make lint       # go vet
-make build      # build binary
-make install    # go install
-make clean      # remove binary
+make test              # run all tests with race detector
+make test-integration  # download 47 dashboards and run integration tests
+make lint              # go vet
+make build             # build binary
+make install           # go install
+make clean             # remove binary
 ```
 
 ### Project structure
 
 ```
 odyssey/
-├── main.go                       # Entry point
+├── main.go                        # Entry point
 ├── cmd/
-│   ├── root.go                   # Cobra root command
-│   ├── convert.go                # Non-interactive convert
-│   ├── check.go                  # Non-interactive check
-│   ├── interactive.go            # Interactive wizard (huh)
-│   └── exec.go                   # Command execution helper
+│   ├── root.go                    # Cobra root command
+│   ├── convert.go                 # Non-interactive convert
+│   ├── check.go                   # Non-interactive check
+│   ├── interactive.go             # Interactive wizard (huh)
+│   └── exec.go                    # Command execution helper
 ├── internal/
 │   ├── engine/
-│   │   └── engine.go             # Shared conversion logic
+│   │   └── engine.go              # Shared conversion logic
+│   ├── integration_test.go        # 47-dashboard integration tests
 │   ├── grafana/
-│   │   ├── parse.go              # Grafana JSON parser
+│   │   ├── parse.go               # Grafana JSON parser
 │   │   └── parse_test.go
 │   ├── promql/
-│   │   ├── metrics.go            # PromQL metric extraction
+│   │   ├── metrics.go             # PromQL metric extraction
 │   │   └── metrics_test.go
 │   └── sts/
-│       ├── client.go             # STS API client + MetricIndex
+│       ├── client.go              # STS API client + MetricIndex
 │       ├── client_test.go
-│       ├── dashboard.go          # STS YAML builder
+│       ├── dashboard.go           # STS YAML builder
 │       ├── dashboard_test.go
-│       ├── sanitize.go           # PromQL sanitisation
+│       ├── sanitize.go            # PromQL sanitisation
 │       └── sanitize_test.go
+├── examples/
+│   ├── grafana-json/              # Source Grafana dashboards
+│   └── verified/                  # Converted STS YAML (ready to apply)
+├── testdata/dashboards/           # 47 dashboards (downloaded via script)
+├── scripts/download-testdata.sh
 ├── Makefile
 ├── go.mod / go.sum
 └── .gitignore

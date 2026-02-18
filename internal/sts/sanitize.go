@@ -5,6 +5,10 @@ import (
 	"strings"
 )
 
+// rangeVarPattern matches $variable or ${variable} used inside range vector brackets [...]
+// e.g. [$interval], [${interval}], [$__range] — replaces them with 5m
+var rangeVarPattern = regexp.MustCompile(`\[\$\{?\w+\}?\]`)
+
 var varLabelFilter = regexp.MustCompile(`,?\s*\w+=~?["'][^"']*\$\w+[^"']*["']|,?\s*\w+=~?\$\w+`)
 
 var danglingComma = regexp.MustCompile(`\{\s*,\s*`)
@@ -27,6 +31,9 @@ func SanitizePromQL(expr string) string {
 	expr = strings.ReplaceAll(expr, "${__rate_interval}", "5m")
 	expr = strings.ReplaceAll(expr, "${__interval}", "5m")
 
+	// Replace remaining $variable references inside range brackets: [$interval] -> [5m]
+	expr = rangeVarPattern.ReplaceAllString(expr, "[5m]")
+
 	expr = varLabelFilter.ReplaceAllString(expr, "")
 	expr = danglingComma.ReplaceAllString(expr, "{")
 	expr = trailingComma.ReplaceAllString(expr, "}")
@@ -38,6 +45,7 @@ func SanitizePromQL(expr string) string {
 
 // RewriteMetricPrefix replaces bare metric names in a PromQL expression with
 // their prefixed counterparts found in STS (e.g. pg_up -> postgresql_pg_up).
+// Also handles _total suffix stripping done by the openmetrics agent.
 func RewriteMetricPrefix(expr string, prefix string, idx *MetricIndex) string {
 	if expr == "" || prefix == "" || idx == nil {
 		return expr
@@ -47,9 +55,23 @@ func RewriteMetricPrefix(expr string, prefix string, idx *MetricIndex) string {
 		if idx.Exact[name] {
 			continue
 		}
+		// Try prefix + name
 		prefixed := prefix + "_" + name
 		if idx.Exact[prefixed] {
 			expr = replaceMetricName(expr, name, prefixed)
+			continue
+		}
+		// Try prefix + name without _total (openmetrics strips counter suffix)
+		if strings.HasSuffix(name, "_total") {
+			bare := strings.TrimSuffix(name, "_total")
+			prefixed = prefix + "_" + bare
+			if idx.Exact[prefixed] {
+				expr = replaceMetricName(expr, name, prefixed)
+				continue
+			}
+			if idx.Exact[bare] {
+				expr = replaceMetricName(expr, name, bare)
+			}
 		}
 	}
 	return expr

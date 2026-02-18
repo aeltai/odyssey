@@ -72,12 +72,25 @@ type MetricIndex struct {
 
 // Has returns true if the metric exists exactly or via suffix match.
 // On a match it also returns the actual STS metric name.
+//
+// The openmetrics agent often strips the _total suffix from counter metrics,
+// so we also try matching without _total when the exact and suffix lookups fail.
 func (mi *MetricIndex) Has(name string) (bool, string) {
 	if mi.Exact[name] {
 		return true, name
 	}
 	if full, ok := mi.Suffix[name]; ok {
 		return true, full
+	}
+	// Try without _total suffix (openmetrics strips it from counters)
+	if strings.HasSuffix(name, "_total") {
+		bare := strings.TrimSuffix(name, "_total")
+		if mi.Exact[bare] {
+			return true, bare
+		}
+		if full, ok := mi.Suffix[bare]; ok {
+			return true, full
+		}
 	}
 	return false, ""
 }

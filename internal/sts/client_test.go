@@ -46,6 +46,31 @@ func TestMetricIndex_Has_ExactTakesPrecedence(t *testing.T) {
 	}
 }
 
+func TestMetricIndex_Has_TotalSuffix(t *testing.T) {
+	idx := &MetricIndex{
+		Exact:  map[string]bool{"mysql_mysql_global_status_commands": true},
+		Suffix: map[string]string{"mysql_global_status_commands": "mysql_mysql_global_status_commands"},
+	}
+	ok, actual := idx.Has("mysql_global_status_commands_total")
+	if !ok {
+		t.Fatal("Has(mysql_global_status_commands_total) = false; want true via _total stripping")
+	}
+	if actual != "mysql_mysql_global_status_commands" {
+		t.Errorf("actual = %q, want mysql_mysql_global_status_commands", actual)
+	}
+}
+
+func TestMetricIndex_Has_TotalSuffix_ExactBare(t *testing.T) {
+	idx := &MetricIndex{
+		Exact:  map[string]bool{"http_requests": true},
+		Suffix: map[string]string{},
+	}
+	ok, actual := idx.Has("http_requests_total")
+	if !ok || actual != "http_requests" {
+		t.Errorf("Has(http_requests_total) = %v, %q; want true, http_requests", ok, actual)
+	}
+}
+
 func TestLoadConfig_MissingBoth(t *testing.T) {
 	t.Setenv("STS_URL", "")
 	t.Setenv("STS_API_TOKEN", "")

@@ -94,9 +94,8 @@ function reset() {
     <!-- Header -->
     <header class="border-b border-slate-800/60 backdrop-blur-sm bg-slate-900/50 sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-6 py-3.5 flex items-center justify-between">
-        <div class="flex items-center gap-2 cursor-pointer" @click="view = 'app'; step = 0">
+        <div class="flex items-center cursor-pointer" @click="view = 'app'; step = 0">
           <h1 class="text-lg font-bold tracking-tight leading-tight">Odyssey</h1>
-          <span class="text-[10px] text-slate-500 uppercase tracking-widest leading-tight hidden sm:inline">Dashboard Migration</span>
         </div>
         <div class="flex items-center gap-2">
           <button

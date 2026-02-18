@@ -49,14 +49,23 @@ func ParseFile(path string) (string, []Panel, error) {
 	if err != nil {
 		return "", nil, fmt.Errorf("read %s: %w", path, err)
 	}
+	return parseRaw(data, path)
+}
+
+// ParseBytes parses a Grafana dashboard from raw JSON bytes.
+func ParseBytes(data []byte) (string, []Panel, error) {
+	return parseRaw(data, "upload")
+}
+
+func parseRaw(data []byte, source string) (string, []Panel, error) {
 	var dash rawDashboard
 	if err := json.Unmarshal(data, &dash); err != nil {
-		return "", nil, fmt.Errorf("parse %s: %w", path, err)
+		return "", nil, fmt.Errorf("parse dashboard JSON: %w", err)
 	}
 	var panels []Panel
-	walkPanels(dash.Panels, "", path, &panels)
+	walkPanels(dash.Panels, "", source, &panels)
 	for _, row := range dash.Rows {
-		walkPanels(row.Panels, strings.TrimSpace(row.Title), path, &panels)
+		walkPanels(row.Panels, strings.TrimSpace(row.Title), source, &panels)
 	}
 	return dash.Title, panels, nil
 }

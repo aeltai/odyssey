@@ -9,7 +9,8 @@ Convert Grafana dashboards to [SUSE Observability](https://www.suse.com/products
 
 ## Features
 
-- **Interactive wizard** — run `odyssey` with no arguments for a guided experience
+- **Web UI** — run `odyssey server` for a browser-based dashboard conversion experience
+- **Interactive wizard** — run `odyssey` with no arguments for a guided terminal experience
 - **Non-interactive CLI** — `odyssey convert` and `odyssey check` for scripting and CI
 - Handles all common Grafana JSON layouts: `panels[]`, `rows[]`, nested panels, `targets[].expr`, and `options.queries[]`
 - Sanitises Grafana-specific PromQL: template variables, time-range variables, uppercase functions
@@ -33,7 +34,16 @@ make build    # produces ./odyssey
 
 ## Quick start
 
-### Interactive mode
+### Web UI
+
+```bash
+odyssey server
+# → http://localhost:3000
+```
+
+Upload Grafana JSON files, configure your STS connection, preview panel analysis, and download the converted YAML — all from your browser.
+
+### Interactive mode (terminal)
 
 ```bash
 odyssey
@@ -98,6 +108,18 @@ odyssey check [flags] <dashboard.json> [more.json ...]
 |------|---------|-------------|
 | `--sts-url` | | SUSE Observability base URL |
 | `--sts-token` | | SUSE Observability API token |
+
+### `odyssey server`
+
+```
+odyssey server [flags]
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-p`, `--port` | `3000` | Port to listen on |
+
+Starts the web UI. The frontend is embedded in the binary — no Node.js required at runtime.
 
 ### `odyssey version`
 
@@ -180,11 +202,25 @@ odyssey/
 ├── main.go                        # Entry point
 ├── cmd/
 │   ├── root.go                    # Cobra root command
+│   ├── server.go                  # Web UI server (embedded Vue)
 │   ├── convert.go                 # Non-interactive convert
 │   ├── check.go                   # Non-interactive check
 │   ├── interactive.go             # Interactive wizard (huh)
-│   └── exec.go                    # Command execution helper
+│   ├── exec.go                    # Command execution helper
+│   └── dist/                      # Built frontend (auto-generated)
+├── web/                           # Vue 3 + Vite + Tailwind frontend
+│   ├── src/
+│   │   ├── App.vue                # Main app with wizard stepper
+│   │   └── components/
+│   │       ├── StepUpload.vue     # Drag & drop file upload
+│   │       ├── StepConfig.vue     # STS connection + options
+│   │       ├── StepResults.vue    # Panel analysis & metrics
+│   │       └── StepOutput.vue     # YAML preview & download
+│   ├── vite.config.js
+│   └── package.json
 ├── internal/
+│   ├── api/
+│   │   └── handler.go             # HTTP API handlers
 │   ├── engine/
 │   │   └── engine.go              # Shared conversion logic
 │   ├── integration_test.go        # 47-dashboard integration tests

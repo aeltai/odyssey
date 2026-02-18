@@ -5,3 +5,6 @@ odyssey
 
 # Downloaded test dashboards (large; use `make download-testdata`)
 testdata/dashboards/*.json
+
+# Frontend dependencies (install via `cd web && npm install`)
+web/node_modules/

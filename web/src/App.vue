@@ -4,7 +4,9 @@ import StepUpload from './components/StepUpload.vue'
 import StepConfig from './components/StepConfig.vue'
 import StepResults from './components/StepResults.vue'
 import StepOutput from './components/StepOutput.vue'
+import DocsTab from './components/DocsTab.vue'
 
+const view = ref('app')
 const step = ref(0)
 const dashboards = ref([])
 const parseResult = ref(null)
@@ -97,19 +99,38 @@ function reset() {
             <p class="text-[10px] text-slate-500 uppercase tracking-widest leading-tight">Dashboard Migration Tool</p>
           </div>
         </div>
-        <div class="flex items-center gap-4">
-          <a href="https://github.com/aeltai/odyssey" target="_blank" class="text-slate-500 hover:text-slate-300 transition-colors">
+        <div class="flex items-center gap-2">
+          <button
+            @click="view = view === 'docs' ? 'app' : 'docs'"
+            :class="[
+              'text-xs px-3 py-1.5 rounded-lg transition-all ring-1',
+              view === 'docs'
+                ? 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/30'
+                : 'text-slate-500 hover:text-white hover:bg-slate-800 ring-slate-700/50',
+            ]"
+          >
+            <span class="flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+              Docs
+            </span>
+          </button>
+          <a href="https://github.com/aeltai/odyssey" target="_blank" class="text-slate-500 hover:text-slate-300 transition-colors p-1.5">
             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
           </a>
-          <button v-if="step > 0" @click="reset" class="text-xs text-slate-500 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-slate-800 ring-1 ring-slate-700/50">
+          <button v-if="step > 0 && view === 'app'" @click="reset" class="text-xs text-slate-500 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-slate-800 ring-1 ring-slate-700/50">
             Start over
           </button>
         </div>
       </div>
     </header>
 
+    <!-- Documentation -->
+    <template v-if="view === 'docs'">
+      <DocsTab />
+    </template>
+
     <!-- Landing -->
-    <template v-if="step === 0">
+    <template v-else-if="step === 0">
       <div class="flex-1 flex flex-col items-center justify-center px-6 py-16">
         <div class="max-w-3xl mx-auto text-center space-y-8">
           <!-- Hero -->
@@ -184,7 +205,7 @@ function reset() {
     </template>
 
     <!-- Wizard -->
-    <template v-else>
+    <template v-else-if="view === 'app' && step > 0">
       <nav class="max-w-7xl mx-auto px-6 pt-6 pb-1">
         <div class="flex items-center gap-2">
           <template v-for="(s, i) in steps" :key="s.num">

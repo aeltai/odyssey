@@ -14,10 +14,25 @@ type Panel struct {
 	Source string
 }
 
+// GrafanaVariable holds the full metadata for a Grafana template variable.
+type GrafanaVariable struct {
+	Name       string
+	Type       string   // query, custom, textbox, constant, interval, datasource
+	Label      string   // display label
+	Query      string   // for query type: label_values(metric, label) etc.
+	Current    string   // current/default value
+	Multi      bool     // allow multiple values
+	IncludeAll bool     // include "All" option
+	AllValue   string   // custom all value (e.g. ".*")
+	Options    []string // for custom/interval: the option values
+	Sort       int      // sort order (0=disabled, 1=alpha-asc, 2=alpha-desc, 3=num-asc, 4=num-desc)
+}
+
 // ParseResult holds everything extracted from a Grafana dashboard JSON.
 type ParseResult struct {
 	Title            string
 	Panels           []Panel
+	Variables        []GrafanaVariable // full variable definitions from templating.list
 	VariableDefaults map[string]string // variable name -> current/default value from templating.list
 }
 
@@ -56,10 +71,22 @@ type rawTemplating struct {
 }
 
 type rawVariable struct {
-	Name    string          `json:"name"`
-	Type    string          `json:"type"`
-	Label   string          `json:"label"`
-	Current json.RawMessage `json:"current"`
+	Name       string          `json:"name"`
+	Type       string          `json:"type"`
+	Label      string          `json:"label"`
+	Query      interface{}     `json:"query"`
+	Current    json.RawMessage `json:"current"`
+	Multi      bool            `json:"multi"`
+	IncludeAll bool            `json:"includeAll"`
+	AllValue   string          `json:"allValue"`
+	Options    []rawOption     `json:"options"`
+	Sort       int             `json:"sort"`
+}
+
+type rawOption struct {
+	Text     interface{} `json:"text"`
+	Value    interface{} `json:"value"`
+	Selected bool        `json:"selected"`
 }
 
 // ParseFile reads a Grafana dashboard JSON and returns the dashboard title
@@ -112,8 +139,43 @@ func parseRawResult(data []byte, source string) (*ParseResult, error) {
 	return &ParseResult{
 		Title:            dash.Title,
 		Panels:           panels,
+		Variables:        extractVariables(dash),
 		VariableDefaults: extractVariableDefaults(dash),
 	}, nil
+}
+
+func extractVariables(dash rawDashboard) []GrafanaVariable {
+	var vars []GrafanaVariable
+	for _, v := range dash.Templating.List {
+		if v.Type == "datasource" || strings.HasPrefix(v.Name, "__") {
+			continue
+		}
+		gv := GrafanaVariable{
+			Name:       v.Name,
+			Type:       v.Type,
+			Label:      v.Label,
+			Multi:      v.Multi,
+			IncludeAll: v.IncludeAll,
+			AllValue:   v.AllValue,
+			Sort:       v.Sort,
+			Current:    parseCurrentValue(v.Current),
+		}
+		switch q := v.Query.(type) {
+		case string:
+			gv.Query = q
+		case map[string]interface{}:
+			if s, ok := q["query"].(string); ok {
+				gv.Query = s
+			}
+		}
+		for _, opt := range v.Options {
+			if s, ok := opt.Value.(string); ok && s != "" && s != "$__all" && !strings.HasPrefix(s, "$__auto") {
+				gv.Options = append(gv.Options, s)
+			}
+		}
+		vars = append(vars, gv)
+	}
+	return vars
 }
 
 func walkPanels(raw []rawPanel, parentTitle, source string, out *[]Panel) {

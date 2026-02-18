@@ -35,6 +35,19 @@ func SanitizePromQL(expr string, interval string) string {
 //
 // vars is a map of variable name -> value. Nil means no substitution (strip all).
 func SanitizePromQLWithVars(expr string, interval string, vars map[string]string) string {
+	return sanitizePromQL(expr, interval, vars, nil)
+}
+
+// SanitizePromQLPreserveVars is like SanitizePromQLWithVars but preserves variable
+// references as ${var} for variables listed in preserveSet, instead of baking or stripping.
+// This allows STS dashboard variables to be used interactively.
+// - preserveSet: variable names to keep as ${name} references
+// - overrides: variable names/values to bake in (takes priority over preserveSet)
+func SanitizePromQLPreserveVars(expr string, interval string, overrides map[string]string, preserveSet map[string]bool) string {
+	return sanitizePromQL(expr, interval, overrides, preserveSet)
+}
+
+func sanitizePromQL(expr string, interval string, vars map[string]string, preserveSet map[string]bool) string {
 	if expr == "" {
 		return expr
 	}
@@ -43,30 +56,84 @@ func SanitizePromQLWithVars(expr string, interval string, vars map[string]string
 	}
 	rangeSec := intervalToSeconds(interval)
 
-	// Replace longer names first ($__range_s before $__range)
-	expr = strings.ReplaceAll(expr, "$__rate_interval", interval)
-	expr = strings.ReplaceAll(expr, "$__interval", interval)
-	expr = strings.ReplaceAll(expr, "${__rate_interval}", interval)
-	expr = strings.ReplaceAll(expr, "${__interval}", interval)
+	// STS natively supports ${__interval} and ${__rate_interval} — normalize to that syntax.
+	// Replace $__range_s and $__range which STS does NOT support.
 	expr = strings.ReplaceAll(expr, "$__range_s", strconv.Itoa(rangeSec))
 	expr = strings.ReplaceAll(expr, "${__range_s}", strconv.Itoa(rangeSec))
 	expr = strings.ReplaceAll(expr, "$__range", interval)
 	expr = strings.ReplaceAll(expr, "${__range}", interval)
 
-	// Replace remaining $variable references inside range brackets: [$interval] -> [interval]
-	expr = rangeVarPattern.ReplaceAllString(expr, "["+interval+"]")
+	if preserveSet != nil {
+		// Phase 1: Replace preserved variables with unique placeholders to protect them.
+		expr = protectPreservedVars(expr, preserveSet)
 
-	// Substitute known variable values into label selectors before stripping unknowns
-	if len(vars) > 0 {
-		expr = substituteVariables(expr, vars)
+		// Phase 2: Normalize builtins to STS native syntax via placeholders.
+		expr = strings.ReplaceAll(expr, "$__rate_interval", "__PH_BUILTIN_rate_interval__")
+		expr = strings.ReplaceAll(expr, "${__rate_interval}", "__PH_BUILTIN_rate_interval__")
+		expr = strings.ReplaceAll(expr, "$__interval", "__PH_BUILTIN_interval__")
+		expr = strings.ReplaceAll(expr, "${__interval}", "__PH_BUILTIN_interval__")
+
+		// Phase 3: Replace remaining range brackets with interval
+		expr = rangeVarPattern.ReplaceAllString(expr, "["+interval+"]")
+
+		// Phase 4: Bake in explicit overrides
+		if len(vars) > 0 {
+			expr = substituteVariables(expr, vars)
+		}
+
+		// Phase 5: Strip remaining unknown variable references
+		expr = varLabelFilter.ReplaceAllString(expr, "")
+		expr = danglingComma.ReplaceAllString(expr, "{")
+		expr = trailingComma.ReplaceAllString(expr, "}")
+		expr = emptyBraces.ReplaceAllString(expr, "")
+
+		// Phase 6: Restore placeholders to ${var} syntax
+		expr = restorePreservedVars(expr, preserveSet)
+		expr = strings.ReplaceAll(expr, "__PH_BUILTIN_rate_interval__", "${__rate_interval}")
+		expr = strings.ReplaceAll(expr, "__PH_BUILTIN_interval__", "${__interval}")
+	} else {
+		// Legacy mode: replace builtins with literals
+		expr = strings.ReplaceAll(expr, "$__rate_interval", interval)
+		expr = strings.ReplaceAll(expr, "$__interval", interval)
+		expr = strings.ReplaceAll(expr, "${__rate_interval}", interval)
+		expr = strings.ReplaceAll(expr, "${__interval}", interval)
+
+		expr = rangeVarPattern.ReplaceAllString(expr, "["+interval+"]")
+
+		if len(vars) > 0 {
+			expr = substituteVariables(expr, vars)
+		}
+
+		expr = varLabelFilter.ReplaceAllString(expr, "")
+		expr = danglingComma.ReplaceAllString(expr, "{")
+		expr = trailingComma.ReplaceAllString(expr, "}")
+		expr = emptyBraces.ReplaceAllString(expr, "")
 	}
 
-	expr = varLabelFilter.ReplaceAllString(expr, "")
-	expr = danglingComma.ReplaceAllString(expr, "{")
-	expr = trailingComma.ReplaceAllString(expr, "}")
-	expr = emptyBraces.ReplaceAllString(expr, "")
-
 	expr = uppercaseFunc.ReplaceAllStringFunc(expr, strings.ToLower)
+	return expr
+}
+
+// protectPreservedVars replaces $var and ${var} references for preserved variables
+// with unique placeholders that won't be caught by the variable-stripping regexes.
+func protectPreservedVars(expr string, preserve map[string]bool) string {
+	for name := range preserve {
+		ph := "__PH_VAR_" + name + "__"
+		// Handle ${var} syntax first (more specific)
+		expr = strings.ReplaceAll(expr, "${"+name+"}", ph)
+		// Handle $var syntax (avoid partial matches by checking word boundary)
+		re := regexp.MustCompile(`\$` + regexp.QuoteMeta(name) + `\b`)
+		expr = re.ReplaceAllString(expr, ph)
+	}
+	return expr
+}
+
+// restorePreservedVars converts placeholders back to ${var} STS syntax.
+func restorePreservedVars(expr string, preserve map[string]bool) string {
+	for name := range preserve {
+		ph := "__PH_VAR_" + name + "__"
+		expr = strings.ReplaceAll(expr, ph, "${"+name+"}")
+	}
 	return expr
 }
 
@@ -91,11 +158,11 @@ func substituteVariables(expr string, vars map[string]string) string {
 			suffix := parts[4] // "$" or ""
 
 			if strings.HasSuffix(op, "=~") {
-				escaped := escapeRegex(value)
+				// Use the value as-is — it's a regex pattern provided by the user
 				if prefix != "" || suffix != "" {
-					return op + `"^` + escaped + `$"`
+					return op + `"^` + value + `$"`
 				}
-				return op + `"` + escaped + `"`
+				return op + `"` + value + `"`
 			}
 			return op + `"` + value + `"`
 		})

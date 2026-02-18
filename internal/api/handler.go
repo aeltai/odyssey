@@ -61,6 +61,7 @@ type ConvertRequest struct {
 	MetricPrefix      string            `json:"metricPrefix"`
 	RewriteMetrics    bool              `json:"rewriteMetrics"`
 	IncludeMissing    bool              `json:"includeMissing"`
+	PreserveVars      *bool             `json:"preserveVars,omitempty"`
 	Interval          string            `json:"interval"`
 	VariableOverrides map[string]string `json:"variableOverrides,omitempty"`
 }
@@ -186,7 +187,7 @@ func handleCheck(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	panels, _, varDefaults, err := parseDashboards(req.Dashboards)
+	parsed, err := parseDashboards(req.Dashboards)
 	if err != nil {
 		writeErr(w, http.StatusUnprocessableEntity, err.Error())
 		return
@@ -196,9 +197,9 @@ func handleCheck(w http.ResponseWriter, r *http.Request) {
 	if interval == "" {
 		interval = "5m"
 	}
-	vars := engine.MergeVars(varDefaults, req.VariableOverrides)
+	vars := engine.MergeVars(parsed.defaults, req.VariableOverrides)
 	var buf bytes.Buffer
-	enriched := engine.SanitiseAndExtract(panels, interval, vars, &buf)
+	enriched := engine.SanitiseAndExtract(parsed.panels, interval, vars, &buf)
 
 	stsCfg, err := sts.LoadConfig(req.STSURL, req.STSToken)
 	if err != nil {
@@ -219,8 +220,8 @@ func handleCheck(w http.ResponseWriter, r *http.Request) {
 	for i, mr := range matchResults {
 		pr := PanelResult{
 			Title:     mr.Title,
-			Expr:      panels[i].Expr,
-			Original:  panels[i].Expr,
+			Expr:      parsed.panels[i].Expr,
+			Original:  parsed.panels[i].Expr,
 			Sanitized: mr.Expr,
 			Metrics:   mr.Metrics,
 			HasData:   mr.HasData,
@@ -250,19 +251,34 @@ func handleConvert(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	panels, title, varDefaults, err := parseDashboards(req.Dashboards)
+	parsed, err := parseDashboards(req.Dashboards)
 	if err != nil {
 		writeErr(w, http.StatusUnprocessableEntity, err.Error())
 		return
+	}
+
+	preserveVars := true
+	if req.PreserveVars != nil {
+		preserveVars = *req.PreserveVars
 	}
 
 	interval := req.Interval
 	if interval == "" {
 		interval = "5m"
 	}
-	vars := engine.MergeVars(varDefaults, req.VariableOverrides)
+
+	var enriched []engine.EnrichedPanel
+	var stsVars []sts.STSVariable
 	var buf bytes.Buffer
-	enriched := engine.SanitiseAndExtract(panels, interval, vars, &buf)
+
+	if preserveVars && len(parsed.variables) > 0 {
+		preserveSet := engine.BuildPreserveSet(parsed.variables, req.VariableOverrides)
+		stsVars = sts.MapVariables(engine.GrafanaVarsToInputs(parsed.variables))
+		enriched = engine.SanitiseAndExtractPreserve(parsed.panels, interval, req.VariableOverrides, preserveSet, &buf)
+	} else {
+		vars := engine.MergeVars(parsed.defaults, req.VariableOverrides)
+		enriched = engine.SanitiseAndExtract(parsed.panels, interval, vars, &buf)
+	}
 
 	var matchResults []engine.MatchResult
 	var detectedPrefix string
@@ -310,13 +326,13 @@ func handleConvert(w http.ResponseWriter, r *http.Request) {
 
 	name := req.Name
 	if name == "" {
-		name = title
+		name = parsed.title
 	}
 	if name == "" {
 		name = "Grafana migrated"
 	}
 
-	dash := sts.BuildDashboard(name, "publicDashboard", 0, panelInputs)
+	dash := sts.BuildDashboard(name, "publicDashboard", 0, panelInputs, stsVars)
 
 	var yamlBuf bytes.Buffer
 	enc := yaml.NewEncoder(&yamlBuf)
@@ -355,6 +371,14 @@ func handleApply(w http.ResponseWriter, r *http.Request) {
 	if err := yaml.Unmarshal([]byte(req.YAML), &dashboardData); err != nil {
 		writeErr(w, http.StatusBadRequest, "invalid YAML: "+err.Error())
 		return
+	}
+
+	if _, ok := dashboardData["description"]; !ok {
+		name, _ := dashboardData["name"].(string)
+		if name == "" {
+			name = "Dashboard"
+		}
+		dashboardData["description"] = "Migrated from Grafana by Odyssey: " + name
 	}
 
 	jsonBody, err := json.Marshal(dashboardData)
@@ -540,14 +564,23 @@ func handleGrafanaDashboard(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func parseDashboards(dbs []ParseRequest) ([]grafana.Panel, string, map[string]string, error) {
+type parsedDashboards struct {
+	panels    []grafana.Panel
+	title     string
+	defaults  map[string]string
+	variables []grafana.GrafanaVariable
+}
+
+func parseDashboards(dbs []ParseRequest) (*parsedDashboards, error) {
 	var all []grafana.Panel
+	var allVars []grafana.GrafanaVariable
 	var title string
 	varDefaults := map[string]string{}
+	seenVars := map[string]bool{}
 	for _, db := range dbs {
 		result, err := parseFromJSONResult(db.Content)
 		if err != nil {
-			return nil, "", nil, err
+			return nil, err
 		}
 		if title == "" && result.Title != "" {
 			title = result.Title
@@ -557,12 +590,23 @@ func parseDashboards(dbs []ParseRequest) ([]grafana.Panel, string, map[string]st
 				varDefaults[k] = v
 			}
 		}
+		for _, v := range result.Variables {
+			if !seenVars[v.Name] {
+				seenVars[v.Name] = true
+				allVars = append(allVars, v)
+			}
+		}
 		all = append(all, result.Panels...)
 	}
 	if len(varDefaults) == 0 {
 		varDefaults = nil
 	}
-	return all, title, varDefaults, nil
+	return &parsedDashboards{
+		panels:    all,
+		title:     title,
+		defaults:  varDefaults,
+		variables: allVars,
+	}, nil
 }
 
 func parseFromJSON(raw json.RawMessage) (string, []grafana.Panel, error) {

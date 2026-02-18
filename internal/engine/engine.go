@@ -21,6 +21,7 @@ type Options struct {
 	IncludeMissing    bool
 	CheckOnly         bool
 	RewriteMetrics    bool
+	PreserveVars      bool              // Generate STS variable definitions instead of baking values.
 	DashID            int64
 	Interval          string            // PromQL interval for rate/irate (e.g. 5m). Default "5m".
 	VariableOverrides map[string]string  // User-specified variable overrides (e.g. namespace=prod).
@@ -43,16 +44,26 @@ type EnrichedPanel struct {
 	ParseError  bool
 }
 
+// ParseInputsResult holds the output of ParseInputs.
+type ParseInputsResult struct {
+	Panels    []grafana.Panel
+	Title     string
+	Defaults  map[string]string
+	Variables []grafana.GrafanaVariable
+}
+
 // ParseInputs reads all Grafana JSON files and returns panels, the first title
-// found, and merged variable defaults from templating.list.
-func ParseInputs(paths []string) ([]grafana.Panel, string, map[string]string, error) {
+// found, merged variable defaults, and full variable definitions.
+func ParseInputs(paths []string) (*ParseInputsResult, error) {
 	var all []grafana.Panel
+	var allVars []grafana.GrafanaVariable
 	var title string
 	varDefaults := map[string]string{}
+	seenVars := map[string]bool{}
 	for _, p := range paths {
 		result, err := grafana.ParseFileResult(p)
 		if err != nil {
-			return nil, "", nil, err
+			return nil, err
 		}
 		if title == "" && result.Title != "" {
 			title = result.Title
@@ -62,12 +73,23 @@ func ParseInputs(paths []string) ([]grafana.Panel, string, map[string]string, er
 				varDefaults[k] = v
 			}
 		}
+		for _, v := range result.Variables {
+			if !seenVars[v.Name] {
+				seenVars[v.Name] = true
+				allVars = append(allVars, v)
+			}
+		}
 		all = append(all, result.Panels...)
 	}
 	if len(varDefaults) == 0 {
 		varDefaults = nil
 	}
-	return all, title, varDefaults, nil
+	return &ParseInputsResult{
+		Panels:    all,
+		Title:     title,
+		Defaults:  varDefaults,
+		Variables: allVars,
+	}, nil
 }
 
 // MergeVars merges Grafana variable defaults with user overrides (overrides win).
@@ -92,13 +114,35 @@ func MergeVars(defaults, overrides map[string]string) map[string]string {
 // Warnings are written to w. interval is used for $__interval, $__range_s etc. (default "5m").
 // vars holds merged variable values to bake into label selectors (nil = strip all).
 func SanitiseAndExtract(panels []grafana.Panel, interval string, vars map[string]string, w io.Writer) []EnrichedPanel {
+	return sanitiseAndExtractInner(panels, interval, vars, nil, w)
+}
+
+// SanitiseAndExtractPreserve is like SanitiseAndExtract but preserves variables in preserveSet
+// as ${var} references in queries instead of baking or stripping them.
+func SanitiseAndExtractPreserve(panels []grafana.Panel, interval string, overrides map[string]string, preserveSet map[string]bool, w io.Writer) []EnrichedPanel {
+	return sanitiseAndExtractInner(panels, interval, overrides, preserveSet, w)
+}
+
+func sanitiseAndExtractInner(panels []grafana.Panel, interval string, vars map[string]string, preserveSet map[string]bool, w io.Writer) []EnrichedPanel {
 	if interval == "" {
 		interval = "5m"
 	}
 	out := make([]EnrichedPanel, 0, len(panels))
 	for _, p := range panels {
-		san := sts.SanitizePromQLWithVars(p.Expr, interval, vars)
-		names, err := promql.ExtractMetricNames(san)
+		var san string
+		if preserveSet != nil {
+			san = sts.SanitizePromQLPreserveVars(p.Expr, interval, vars, preserveSet)
+		} else {
+			san = sts.SanitizePromQLWithVars(p.Expr, interval, vars)
+		}
+
+		// For metric extraction, we need a version without ${var} references
+		extractExpr := san
+		if preserveSet != nil {
+			extractExpr = sts.SanitizePromQLWithVars(p.Expr, interval, vars)
+		}
+
+		names, err := promql.ExtractMetricNames(extractExpr)
 		ep := EnrichedPanel{Panel: p, Sanitized: san}
 		if err != nil {
 			ep.ParseError = true
@@ -179,12 +223,50 @@ func CountResults(results []MatchResult) (int, int) {
 	return matched, missing
 }
 
+// GrafanaVarsToInputs converts Grafana variables to STS VariableInput format.
+func GrafanaVarsToInputs(gvars []grafana.GrafanaVariable) []sts.VariableInput {
+	var result []sts.VariableInput
+	for _, gv := range gvars {
+		result = append(result, sts.VariableInput{
+			Name:       gv.Name,
+			Type:       gv.Type,
+			Label:      gv.Label,
+			Query:      gv.Query,
+			Multi:      gv.Multi,
+			IncludeAll: gv.IncludeAll,
+			AllValue:   gv.AllValue,
+			Options:    gv.Options,
+			Default:    gv.Current,
+			Sort:       gv.Sort,
+		})
+	}
+	return result
+}
+
+// BuildPreserveSet creates a set of variable names that should be preserved as ${var}
+// in PromQL queries (i.e., variables that have STS definitions and are not overridden).
+func BuildPreserveSet(gvars []grafana.GrafanaVariable, overrides map[string]string) map[string]bool {
+	result := map[string]bool{}
+	for _, gv := range gvars {
+		if _, overridden := overrides[gv.Name]; !overridden {
+			result[gv.Name] = true
+		}
+	}
+	if len(result) == 0 {
+		return nil
+	}
+	return result
+}
+
 // Run executes the full conversion pipeline and returns the result.
 func Run(opts Options, w io.Writer) (*Result, error) {
-	panels, dashTitle, varDefaults, err := ParseInputs(opts.Inputs)
+	parsed, err := ParseInputs(opts.Inputs)
 	if err != nil {
 		return nil, err
 	}
+	panels := parsed.Panels
+	dashTitle := parsed.Title
+	varDefaults := parsed.Defaults
 	fmt.Fprintf(w, "Parsed %d panels from %d file(s)\n", len(panels), len(opts.Inputs))
 	if len(panels) == 0 {
 		return &Result{}, nil
@@ -195,7 +277,21 @@ func Run(opts Options, w io.Writer) (*Result, error) {
 		interval = "5m"
 	}
 	vars := MergeVars(varDefaults, opts.VariableOverrides)
-	enriched := SanitiseAndExtract(panels, interval, vars, w)
+
+	var enriched []EnrichedPanel
+	var stsVars []sts.STSVariable
+	var preserveSet map[string]bool
+
+	if opts.PreserveVars && len(parsed.Variables) > 0 {
+		preserveSet = BuildPreserveSet(parsed.Variables, opts.VariableOverrides)
+		stsVars = sts.MapVariables(GrafanaVarsToInputs(parsed.Variables))
+		enriched = SanitiseAndExtractPreserve(panels, interval, opts.VariableOverrides, preserveSet, w)
+		if len(stsVars) > 0 {
+			fmt.Fprintf(w, "Mapped %d Grafana variables to STS dashboard variables\n", len(stsVars))
+		}
+	} else {
+		enriched = SanitiseAndExtract(panels, interval, vars, w)
+	}
 
 	stsCfg, err := sts.LoadConfig(opts.STSURL, opts.STSToken)
 	if err != nil {
@@ -260,7 +356,7 @@ func Run(opts Options, w io.Writer) (*Result, error) {
 		name = "Grafana migrated"
 	}
 
-	dash := sts.BuildDashboard(name, "publicDashboard", opts.DashID, panelInputs)
+	dash := sts.BuildDashboard(name, "publicDashboard", opts.DashID, panelInputs, stsVars)
 	if err := sts.WriteDashboardYAML(dash, opts.Output); err != nil {
 		return nil, fmt.Errorf("write YAML: %w", err)
 	}

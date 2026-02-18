@@ -18,6 +18,7 @@ var convertFlags struct {
 	metricPrefix   string
 	includeMissing bool
 	rewriteMetrics bool
+	preserveVars   bool
 	dashID         int64
 	interval       string
 	variables      []string
@@ -45,6 +46,7 @@ STS dashboard YAML file.`,
 			MetricPrefix:      convertFlags.metricPrefix,
 			IncludeMissing:    convertFlags.includeMissing,
 			RewriteMetrics:    convertFlags.rewriteMetrics,
+			PreserveVars:      convertFlags.preserveVars,
 			DashID:            convertFlags.dashID,
 			Interval:          convertFlags.interval,
 			VariableOverrides: parseVariableFlags(convertFlags.variables),
@@ -68,5 +70,6 @@ func init() {
 	f.BoolVar(&convertFlags.rewriteMetrics, "rewrite-metrics", true, "Rewrite metric names to match STS prefix")
 	f.Int64Var(&convertFlags.dashID, "id", 0, "Existing STS dashboard ID (for updates)")
 	f.StringVar(&convertFlags.interval, "interval", "5m", "PromQL interval for rate/irate (e.g. 5m, 1m, 15m)")
+	f.BoolVar(&convertFlags.preserveVars, "preserve-vars", true, "Generate STS dashboard variables instead of baking values into queries")
 	f.StringArrayVarP(&convertFlags.variables, "variable", "v", nil, "Bake variable value into queries (e.g. -v namespace=prod -v job=myjob)")
 }

@@ -291,15 +291,15 @@ func interactiveFileParse() ([]grafana.Panel, string, []string, error) {
 		inputs = []string{inputPath}
 	}
 
-	panels, dashTitle, _, err := engine.ParseInputs(inputs)
+	parsed, err := engine.ParseInputs(inputs)
 	if err != nil {
 		return nil, "", nil, fmt.Errorf("parse error: %w", err)
 	}
 	fmt.Printf("  Found %s in %d file(s)\n\n",
-		successStyle.Render(fmt.Sprintf("%d panels", len(panels))),
+		successStyle.Render(fmt.Sprintf("%d panels", len(parsed.Panels))),
 		len(inputs))
 
-	return panels, dashTitle, inputs, nil
+	return parsed.Panels, parsed.Title, inputs, nil
 }
 
 func interactiveGrafanaPull() ([]grafana.Panel, string, []string, error) {

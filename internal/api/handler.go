@@ -3,9 +3,11 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/aeltai/odyssey/internal/engine"
 	"github.com/aeltai/odyssey/internal/grafana"
@@ -26,6 +28,7 @@ type ParseResponse struct {
 type PanelResult struct {
 	Title     string   `json:"title"`
 	Expr      string   `json:"expr"`
+	Original  string   `json:"original,omitempty"`
 	Sanitized string   `json:"sanitized"`
 	Metrics   []string `json:"metrics"`
 	HasData   bool     `json:"hasData"`
@@ -64,11 +67,46 @@ type ConvertResponse struct {
 	DetectedPrefix string `json:"detectedPrefix"`
 }
 
+type ApplyRequest struct {
+	YAML     string `json:"yaml"`
+	STSURL   string `json:"stsUrl"`
+	STSToken string `json:"stsToken"`
+}
+
+type ApplyResponse struct {
+	Success     bool   `json:"success"`
+	DashboardID int64  `json:"dashboardId,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Message     string `json:"message"`
+}
+
+type GrafanaConnectRequest struct {
+	URL   string `json:"url"`
+	Token string `json:"token"`
+}
+
+type GrafanaDashboardSummary struct {
+	UID   string `json:"uid"`
+	Title string `json:"title"`
+	URI   string `json:"uri,omitempty"`
+	Type  string `json:"type,omitempty"`
+	Tags  []string `json:"tags,omitempty"`
+}
+
+type GrafanaDashboardFetchRequest struct {
+	URL   string `json:"url"`
+	Token string `json:"token"`
+	UID   string `json:"uid"`
+}
+
 func NewRouter() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /api/parse", handleParse)
 	mux.HandleFunc("POST /api/check", handleCheck)
 	mux.HandleFunc("POST /api/convert", handleConvert)
+	mux.HandleFunc("POST /api/apply", handleApply)
+	mux.HandleFunc("POST /api/grafana/dashboards", handleGrafanaDashboards)
+	mux.HandleFunc("POST /api/grafana/dashboard", handleGrafanaDashboard)
 	mux.HandleFunc("GET /api/health", handleHealth)
 	return corsMiddleware(mux)
 }
@@ -111,6 +149,7 @@ func handleParse(w http.ResponseWriter, r *http.Request) {
 		pr := PanelResult{
 			Title:     ep.Panel.Title,
 			Expr:      ep.Panel.Expr,
+			Original:  ep.Panel.Expr,
 			Sanitized: ep.Sanitized,
 			Metrics:   ep.MetricNames,
 		}
@@ -162,6 +201,7 @@ func handleCheck(w http.ResponseWriter, r *http.Request) {
 		pr := PanelResult{
 			Title:     mr.Title,
 			Expr:      panels[i].Expr,
+			Original:  panels[i].Expr,
 			Sanitized: mr.Expr,
 			Metrics:   mr.Metrics,
 			HasData:   mr.HasData,
@@ -268,6 +308,211 @@ func handleConvert(w http.ResponseWriter, r *http.Request) {
 		Matched:        matched,
 		Missing:        missing,
 		DetectedPrefix: detectedPrefix,
+	})
+}
+
+// handleApply sends the generated dashboard YAML to the STS Dashboards API.
+func handleApply(w http.ResponseWriter, r *http.Request) {
+	var req ApplyRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeErr(w, http.StatusBadRequest, "invalid request: "+err.Error())
+		return
+	}
+	if req.STSURL == "" || req.STSToken == "" {
+		writeErr(w, http.StatusBadRequest, "STS URL and API token are required to apply")
+		return
+	}
+	if req.YAML == "" {
+		writeErr(w, http.StatusBadRequest, "no YAML to apply")
+		return
+	}
+
+	var dashboardData map[string]interface{}
+	if err := yaml.Unmarshal([]byte(req.YAML), &dashboardData); err != nil {
+		writeErr(w, http.StatusBadRequest, "invalid YAML: "+err.Error())
+		return
+	}
+
+	jsonBody, err := json.Marshal(dashboardData)
+	if err != nil {
+		writeErr(w, http.StatusInternalServerError, "json marshal: "+err.Error())
+		return
+	}
+
+	apiURL := strings.TrimRight(req.STSURL, "/") + "/api/dashboards"
+
+	httpReq, err := http.NewRequest("POST", apiURL, bytes.NewReader(jsonBody))
+	if err != nil {
+		writeErr(w, http.StatusInternalServerError, "create request: "+err.Error())
+		return
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("X-API-Token", req.STSToken)
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		writeErr(w, http.StatusBadGateway, "STS API call failed: "+err.Error())
+		return
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+
+	if resp.StatusCode >= 400 {
+		msg := string(body)
+		if len(msg) > 500 {
+			msg = msg[:500]
+		}
+		writeErr(w, http.StatusBadGateway, fmt.Sprintf("STS returned %d: %s", resp.StatusCode, msg))
+		return
+	}
+
+	var result map[string]interface{}
+	json.Unmarshal(body, &result)
+
+	applyResp := ApplyResponse{
+		Success: true,
+		Message: "Dashboard applied successfully",
+	}
+	if id, ok := result["id"].(float64); ok {
+		applyResp.DashboardID = int64(id)
+	}
+	if name, ok := result["name"].(string); ok {
+		applyResp.Name = name
+	}
+
+	writeJSON(w, http.StatusOK, applyResp)
+}
+
+// handleGrafanaDashboards lists dashboards from a Grafana instance.
+func handleGrafanaDashboards(w http.ResponseWriter, r *http.Request) {
+	var req GrafanaConnectRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeErr(w, http.StatusBadRequest, "invalid request: "+err.Error())
+		return
+	}
+	if req.URL == "" {
+		writeErr(w, http.StatusBadRequest, "Grafana URL is required")
+		return
+	}
+
+	apiURL := strings.TrimRight(req.URL, "/") + "/api/search?type=dash-db&limit=200"
+
+	httpReq, err := http.NewRequest("GET", apiURL, nil)
+	if err != nil {
+		writeErr(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	httpReq.Header.Set("Accept", "application/json")
+	if req.Token != "" {
+		httpReq.Header.Set("Authorization", "Bearer "+req.Token)
+	}
+
+	client := &http.Client{Timeout: 15 * time.Second}
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		writeErr(w, http.StatusBadGateway, "Grafana connection failed: "+err.Error())
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		body, _ := io.ReadAll(resp.Body)
+		msg := string(body)
+		if len(msg) > 300 {
+			msg = msg[:300]
+		}
+		writeErr(w, http.StatusBadGateway, fmt.Sprintf("Grafana returned %d: %s", resp.StatusCode, msg))
+		return
+	}
+
+	var rawDashboards []struct {
+		UID   string   `json:"uid"`
+		Title string   `json:"title"`
+		URI   string   `json:"uri"`
+		Type  string   `json:"type"`
+		Tags  []string `json:"tags"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&rawDashboards); err != nil {
+		writeErr(w, http.StatusBadGateway, "failed to parse Grafana response: "+err.Error())
+		return
+	}
+
+	dashboards := make([]GrafanaDashboardSummary, 0, len(rawDashboards))
+	for _, d := range rawDashboards {
+		dashboards = append(dashboards, GrafanaDashboardSummary{
+			UID:   d.UID,
+			Title: d.Title,
+			URI:   d.URI,
+			Type:  d.Type,
+			Tags:  d.Tags,
+		})
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"dashboards": dashboards,
+		"total":      len(dashboards),
+	})
+}
+
+// handleGrafanaDashboard fetches a single dashboard JSON from Grafana by UID.
+func handleGrafanaDashboard(w http.ResponseWriter, r *http.Request) {
+	var req GrafanaDashboardFetchRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeErr(w, http.StatusBadRequest, "invalid request: "+err.Error())
+		return
+	}
+	if req.URL == "" || req.UID == "" {
+		writeErr(w, http.StatusBadRequest, "Grafana URL and dashboard UID are required")
+		return
+	}
+
+	apiURL := strings.TrimRight(req.URL, "/") + "/api/dashboards/uid/" + req.UID
+
+	httpReq, err := http.NewRequest("GET", apiURL, nil)
+	if err != nil {
+		writeErr(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	httpReq.Header.Set("Accept", "application/json")
+	if req.Token != "" {
+		httpReq.Header.Set("Authorization", "Bearer "+req.Token)
+	}
+
+	client := &http.Client{Timeout: 15 * time.Second}
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		writeErr(w, http.StatusBadGateway, "Grafana connection failed: "+err.Error())
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		body, _ := io.ReadAll(resp.Body)
+		msg := string(body)
+		if len(msg) > 300 {
+			msg = msg[:300]
+		}
+		writeErr(w, http.StatusBadGateway, fmt.Sprintf("Grafana returned %d: %s", resp.StatusCode, msg))
+		return
+	}
+
+	var wrapper struct {
+		Dashboard json.RawMessage `json:"dashboard"`
+		Meta      struct {
+			Slug string `json:"slug"`
+		} `json:"meta"`
+	}
+	body, _ := io.ReadAll(resp.Body)
+	if err := json.Unmarshal(body, &wrapper); err != nil {
+		writeErr(w, http.StatusBadGateway, "failed to parse Grafana dashboard: "+err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"dashboard": json.RawMessage(wrapper.Dashboard),
+		"slug":      wrapper.Meta.Slug,
 	})
 }
 

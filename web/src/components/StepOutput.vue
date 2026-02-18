@@ -14,6 +14,12 @@ const detectedPrefix = ref('')
 const copied = ref(false)
 const showApplyGuide = ref(false)
 
+const applying = ref(false)
+const applyResult = ref(null)
+const applyError = ref('')
+
+const hasSTSConnection = computed(() => !!props.config.stsUrl && !!props.config.stsToken)
+
 onMounted(async () => { await convert() })
 
 async function convert() {
@@ -45,6 +51,27 @@ async function convert() {
   finally { loading.value = false }
 }
 
+async function applyToSTS() {
+  applying.value = true
+  applyError.value = ''
+  applyResult.value = null
+  try {
+    const resp = await fetch('/api/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        yaml: yaml.value,
+        stsUrl: props.config.stsUrl,
+        stsToken: props.config.stsToken,
+      }),
+    })
+    const data = await resp.json()
+    if (!resp.ok) throw new Error(data.error)
+    applyResult.value = data
+  } catch (e) { applyError.value = e.message }
+  finally { applying.value = false }
+}
+
 function copyToClipboard() {
   navigator.clipboard.writeText(yaml.value)
   copied.value = true
@@ -65,7 +92,6 @@ function download() {
 const yamlLines = computed(() => yaml.value.split('\n').length)
 const yamlSize = computed(() => (yaml.value.length / 1024).toFixed(1))
 const fileName = computed(() => `${(props.config.name || 'dashboard').toLowerCase().replace(/\s+/g, '-')}.sts.yaml`)
-
 const numberedYaml = computed(() => {
   if (!yaml.value) return []
   return yaml.value.split('\n').map((line, i) => ({ num: i + 1, content: line }))
@@ -77,7 +103,7 @@ const numberedYaml = computed(() => {
     <div>
       <h2 class="text-2xl font-bold mb-2">Export Dashboard</h2>
       <p class="text-slate-400 leading-relaxed">
-        Your SUSE Observability dashboard YAML is ready. Download the file and apply it with the <code class="text-emerald-400 text-xs">sts</code> CLI, or copy the contents directly.
+        Your SUSE Observability dashboard is ready. Apply it directly, download the YAML, or copy the contents.
       </p>
     </div>
 
@@ -115,84 +141,115 @@ const numberedYaml = computed(() => {
         </div>
       </div>
 
-      <!-- Actions -->
-      <div class="flex items-center gap-2">
+      <!-- Apply to STS (prominent if connected) -->
+      <div v-if="hasSTSConnection" class="bg-emerald-500/5 rounded-2xl ring-1 ring-emerald-500/20 p-5 space-y-3">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-lg bg-emerald-500/15 flex items-center justify-center">
+            <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z" /></svg>
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold text-emerald-300">Apply Directly to SUSE Observability</h3>
+            <p class="text-xs text-slate-500">Push this dashboard to {{ config.stsUrl }} using the Dashboards API</p>
+          </div>
+        </div>
+
+        <div v-if="applyResult" class="bg-emerald-500/10 rounded-xl px-4 py-3 flex items-start gap-2">
+          <svg class="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <div>
+            <p class="text-sm text-emerald-300 font-medium">{{ applyResult.message }}</p>
+            <p v-if="applyResult.dashboardId" class="text-xs text-slate-400 mt-0.5">Dashboard ID: {{ applyResult.dashboardId }} &middot; <a :href="config.stsUrl" target="_blank" class="text-emerald-400 hover:underline">Open in STS</a></p>
+          </div>
+        </div>
+
+        <div v-if="applyError" class="bg-red-500/10 rounded-xl px-4 py-3 text-red-400 text-sm flex items-start gap-2">
+          <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          {{ applyError }}
+        </div>
+
         <button
-          @click="download"
-          class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-emerald-500 hover:bg-emerald-400 text-slate-900 shadow-lg shadow-emerald-500/25 transition-all"
+          @click="applyToSTS"
+          :disabled="applying || !!applyResult"
+          :class="[
+            'w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2',
+            applyResult ? 'bg-emerald-500/20 text-emerald-400 cursor-default' :
+            applying ? 'bg-slate-800/60 text-slate-500 cursor-wait' :
+            'bg-emerald-500 hover:bg-emerald-400 text-slate-900 shadow-lg shadow-emerald-500/25'
+          ]"
         >
+          <template v-if="applying">
+            <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" /><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+            Applying to STS...
+          </template>
+          <template v-else-if="applyResult">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+            Applied Successfully
+          </template>
+          <template v-else>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z" /></svg>
+            Apply Dashboard to STS
+          </template>
+        </button>
+      </div>
+
+      <!-- Download / Copy actions -->
+      <div class="flex items-center gap-2">
+        <button @click="download" class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-slate-700 hover:bg-slate-600 text-white ring-1 ring-slate-600/50 transition-all">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
           Download {{ fileName }}
         </button>
-        <button
-          @click="copyToClipboard"
-          :class="[
-            'flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ring-1',
-            copied ? 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/30' : 'bg-slate-800/60 text-slate-300 hover:text-white ring-slate-700/40 hover:ring-slate-600',
-          ]"
-        >
+        <button @click="copyToClipboard" :class="['flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ring-1', copied ? 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/30' : 'bg-slate-800/60 text-slate-300 hover:text-white ring-slate-700/40 hover:ring-slate-600']">
           <svg v-if="!copied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
           <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
           {{ copied ? 'Copied!' : 'Copy YAML' }}
         </button>
       </div>
 
-      <!-- Apply guide (collapsible) -->
-      <div class="bg-slate-800/20 rounded-2xl ring-1 ring-slate-700/40 overflow-hidden">
+      <!-- Manual apply guide (collapsed by default, only shown when no STS connection) -->
+      <div v-if="!hasSTSConnection" class="bg-slate-800/20 rounded-2xl ring-1 ring-slate-700/40 overflow-hidden">
         <button @click="showApplyGuide = !showApplyGuide" class="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-800/30 transition-colors">
           <div class="flex items-center gap-3">
             <div class="w-8 h-8 rounded-lg bg-teal-500/15 flex items-center justify-center">
               <svg class="w-4 h-4 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
             </div>
-            <span class="text-sm font-medium text-slate-200">How to apply this dashboard</span>
+            <span class="text-sm font-medium text-slate-200">How to apply this dashboard manually</span>
           </div>
           <svg :class="['w-4 h-4 text-slate-500 transition-transform', showApplyGuide ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
         </button>
-
         <div v-if="showApplyGuide" class="px-5 pb-5 space-y-4 border-t border-slate-700/30">
           <div class="mt-4 space-y-3">
             <div class="flex gap-3">
-              <div class="w-6 h-6 rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span class="text-[10px] font-bold text-emerald-400">1</span>
-              </div>
+              <div class="w-6 h-6 rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0 mt-0.5"><span class="text-[10px] font-bold text-emerald-400">1</span></div>
               <div>
                 <p class="text-sm text-slate-300 font-medium">Install the STS CLI</p>
                 <code class="text-xs text-slate-500 font-mono mt-1 block bg-slate-900/60 rounded-lg px-3 py-2">curl -sSL https://dl.stackstate.com/sts-cli/install.sh | bash</code>
               </div>
             </div>
             <div class="flex gap-3">
-              <div class="w-6 h-6 rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span class="text-[10px] font-bold text-emerald-400">2</span>
-              </div>
+              <div class="w-6 h-6 rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0 mt-0.5"><span class="text-[10px] font-bold text-emerald-400">2</span></div>
               <div>
                 <p class="text-sm text-slate-300 font-medium">Configure your instance</p>
-                <code class="text-xs text-slate-500 font-mono mt-1 block bg-slate-900/60 rounded-lg px-3 py-2">sts context save --name prod --url {{ config.stsUrl || 'https://your-sts-instance.com' }} --api-token &lt;token&gt;</code>
+                <code class="text-xs text-slate-500 font-mono mt-1 block bg-slate-900/60 rounded-lg px-3 py-2">sts context save --name prod --url https://your-sts-instance.com --api-token &lt;token&gt;</code>
               </div>
             </div>
             <div class="flex gap-3">
-              <div class="w-6 h-6 rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span class="text-[10px] font-bold text-emerald-400">3</span>
-              </div>
+              <div class="w-6 h-6 rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0 mt-0.5"><span class="text-[10px] font-bold text-emerald-400">3</span></div>
               <div>
                 <p class="text-sm text-slate-300 font-medium">Apply the dashboard</p>
                 <code class="text-xs text-emerald-400 font-mono mt-1 block bg-slate-900/60 rounded-lg px-3 py-2">sts dashboard apply --file {{ fileName }}</code>
               </div>
             </div>
           </div>
-          <p class="text-[10px] text-slate-600">
-            Alternatively, you can navigate to SUSE Observability &rarr; Dashboards &rarr; Import and paste the YAML content directly.
-          </p>
         </div>
       </div>
 
-      <!-- YAML preview with line numbers -->
+      <!-- YAML preview -->
       <div>
         <div class="flex items-center justify-between mb-2">
           <p class="text-xs text-slate-500 font-medium">YAML Preview</p>
           <p class="text-[10px] text-slate-600 font-mono">{{ fileName }}</p>
         </div>
         <div class="bg-slate-950/80 rounded-2xl ring-1 ring-slate-800/80 overflow-hidden">
-          <div class="max-h-[50vh] overflow-auto">
+          <div class="max-h-[45vh] overflow-auto">
             <table class="w-full text-xs font-mono">
               <tbody>
                 <tr v-for="line in numberedYaml" :key="line.num" class="hover:bg-slate-800/30">
@@ -205,7 +262,7 @@ const numberedYaml = computed(() => {
         </div>
       </div>
 
-      <!-- Grafana / STS info -->
+      <!-- Source → Target -->
       <div class="grid grid-cols-2 gap-3">
         <div class="bg-slate-800/20 rounded-xl ring-1 ring-slate-700/40 p-4">
           <div class="flex items-center gap-2 mb-2">
@@ -225,7 +282,7 @@ const numberedYaml = computed(() => {
             <p class="text-xs font-semibold text-slate-400">Target</p>
           </div>
           <p class="text-sm text-slate-300">SUSE Observability</p>
-          <p class="text-xs text-slate-600 mt-0.5">Ready for <code class="text-slate-500">sts dashboard apply</code></p>
+          <p class="text-xs text-slate-600 mt-0.5">{{ hasSTSConnection ? 'Connected — ready to apply' : 'Download & apply with sts CLI' }}</p>
         </div>
       </div>
     </template>

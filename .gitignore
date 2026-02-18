@@ -1,3 +1,6 @@
 odyssey
 *.sts.yaml
 .DS_Store
+
+# Downloaded test dashboards (large; use `make download-testdata`)
+testdata/dashboards/*.json

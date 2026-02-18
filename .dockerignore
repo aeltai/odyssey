@@ -1,0 +1,7 @@
+odyssey
+*.sts.yaml
+testdata/dashboards/*.json
+web/node_modules/
+cmd/dist/
+.git
+.DS_Store

@@ -8,3 +8,6 @@ testdata/dashboards/*.json
 
 # Frontend dependencies (install via `cd web && npm install`)
 web/node_modules/
+
+# Azure deployment secrets
+deploy/azure/.env

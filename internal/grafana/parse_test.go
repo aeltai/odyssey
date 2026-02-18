@@ -301,6 +301,105 @@ func TestParseFile_SourceFieldPopulated(t *testing.T) {
 	}
 }
 
+func TestParseFileResult_VariableDefaults(t *testing.T) {
+	j := `{
+		"title": "Vars",
+		"panels": [{"title":"P","type":"graph","targets":[{"expr":"up"}]}],
+		"templating": {
+			"list": [
+				{"name": "namespace", "type": "query", "current": {"text": "prod", "value": "prod"}},
+				{"name": "job", "type": "query", "current": {"text": "myjob", "value": "myjob"}},
+				{"name": "ds", "type": "datasource", "current": {"text": "Prometheus", "value": "Prometheus"}},
+				{"name": "__interval", "type": "interval", "current": {"text": "5m", "value": "5m"}},
+				{"name": "empty_var", "type": "query", "current": {}},
+				{"name": "all_var", "type": "query", "current": {"text": "All", "value": "$__all"}}
+			]
+		}
+	}`
+	path := writeTmp(t, j)
+	result, err := ParseFileResult(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Title != "Vars" {
+		t.Errorf("Title = %q", result.Title)
+	}
+	if len(result.Panels) != 1 {
+		t.Fatalf("got %d panels", len(result.Panels))
+	}
+	if result.VariableDefaults == nil {
+		t.Fatal("VariableDefaults is nil")
+	}
+	if v := result.VariableDefaults["namespace"]; v != "prod" {
+		t.Errorf("namespace = %q, want prod", v)
+	}
+	if v := result.VariableDefaults["job"]; v != "myjob" {
+		t.Errorf("job = %q, want myjob", v)
+	}
+	if _, ok := result.VariableDefaults["ds"]; ok {
+		t.Error("datasource variable should be skipped")
+	}
+	if _, ok := result.VariableDefaults["__interval"]; ok {
+		t.Error("__interval should be skipped")
+	}
+	if _, ok := result.VariableDefaults["empty_var"]; ok {
+		t.Error("empty_var should be skipped")
+	}
+	if _, ok := result.VariableDefaults["all_var"]; ok {
+		t.Error("$__all value should be skipped")
+	}
+}
+
+func TestParseFileResult_VariableArrayValue(t *testing.T) {
+	j := `{
+		"title": "ArrayVal",
+		"panels": [{"title":"P","type":"graph","targets":[{"expr":"up"}]}],
+		"templating": {
+			"list": [
+				{"name": "instance", "type": "query", "current": {"text": "host1", "value": ["host1", "host2"]}}
+			]
+		}
+	}`
+	path := writeTmp(t, j)
+	result, err := ParseFileResult(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if v := result.VariableDefaults["instance"]; v != "host1" {
+		t.Errorf("instance = %q, want host1 (first element)", v)
+	}
+}
+
+func TestParseFileResult_NoTemplating(t *testing.T) {
+	j := `{"title": "Plain", "panels": [{"title":"P","type":"graph","targets":[{"expr":"up"}]}]}`
+	path := writeTmp(t, j)
+	result, err := ParseFileResult(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.VariableDefaults != nil {
+		t.Errorf("expected nil VariableDefaults, got %v", result.VariableDefaults)
+	}
+}
+
+func TestParseBytesResult(t *testing.T) {
+	j := `{
+		"title": "BytesParse",
+		"panels": [{"title":"X","type":"graph","targets":[{"expr":"up"}]}],
+		"templating": {"list": [{"name": "env", "type": "custom", "current": {"value": "staging"}}]}
+	}`
+	result, err := ParseBytesResult([]byte(j))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Title != "BytesParse" {
+		t.Errorf("Title = %q", result.Title)
+	}
+	if v := result.VariableDefaults["env"]; v != "staging" {
+		t.Errorf("env = %q, want staging", v)
+	}
+}
+
 func writeTmp(t *testing.T, content string) string {
 	t.Helper()
 	dir := t.TempDir()

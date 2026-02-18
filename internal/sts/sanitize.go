@@ -1,6 +1,7 @@
 package sts
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -20,13 +21,20 @@ var emptyBraces = regexp.MustCompile(`\{\s*\}`)
 var uppercaseFunc = regexp.MustCompile(`\b(SUM|AVG|MIN|MAX|COUNT|RATE|IRATE|INCREASE|DELTA|ROUND|ABS|CEIL|FLOOR|SQRT|CLAMP|CLAMP_MAX|CLAMP_MIN|TOPK|BOTTOMK|COUNT_VALUES|QUANTILE|STDDEV|STDVAR|ABSENT|LABEL_REPLACE|LABEL_JOIN|SORT|SORT_DESC|CHANGES|RESETS|DERIV|PREDICT_LINEAR|HISTOGRAM_QUANTILE|LAST_OVER_TIME|MAX_OVER_TIME|MIN_OVER_TIME|SUM_OVER_TIME|AVG_OVER_TIME|COUNT_OVER_TIME|STDDEV_OVER_TIME|QUANTILE_OVER_TIME)\b`)
 
 // SanitizePromQL makes a Grafana PromQL expression compatible with SUSE Observability.
+// Equivalent to SanitizePromQLWithVars(expr, interval, nil).
+func SanitizePromQL(expr string, interval string) string {
+	return SanitizePromQLWithVars(expr, interval, nil)
+}
+
+// SanitizePromQLWithVars makes a Grafana PromQL expression compatible with SUSE Observability.
 //
 //   - Replaces $__rate_interval / $__interval with the given interval (default "5m")
-//   - Removes label selectors that reference Grafana $variables
+//   - Substitutes known variable values into label selectors (e.g. namespace="$namespace" -> namespace="prod")
+//   - Removes remaining label selectors that reference unknown Grafana $variables
 //   - Lowercases uppercase PromQL function names
 //
-// If interval is empty, "5m" is used. Supports Prometheus duration: 1m, 5m, 15m, 1h, etc.
-func SanitizePromQL(expr string, interval string) string {
+// vars is a map of variable name -> value. Nil means no substitution (strip all).
+func SanitizePromQLWithVars(expr string, interval string, vars map[string]string) string {
 	if expr == "" {
 		return expr
 	}
@@ -48,6 +56,11 @@ func SanitizePromQL(expr string, interval string) string {
 	// Replace remaining $variable references inside range brackets: [$interval] -> [interval]
 	expr = rangeVarPattern.ReplaceAllString(expr, "["+interval+"]")
 
+	// Substitute known variable values into label selectors before stripping unknowns
+	if len(vars) > 0 {
+		expr = substituteVariables(expr, vars)
+	}
+
 	expr = varLabelFilter.ReplaceAllString(expr, "")
 	expr = danglingComma.ReplaceAllString(expr, "{")
 	expr = trailingComma.ReplaceAllString(expr, "}")
@@ -55,6 +68,50 @@ func SanitizePromQL(expr string, interval string) string {
 
 	expr = uppercaseFunc.ReplaceAllStringFunc(expr, strings.ToLower)
 	return expr
+}
+
+// substituteVariables replaces $var and ${var} references in label selectors with
+// their concrete values. Handles both = and =~ operators.
+func substituteVariables(expr string, vars map[string]string) string {
+	for name, value := range vars {
+		// Match: label="$var", label='$var', label=~"$var", label=~"^$var$"
+		// Also handles ${var} syntax.
+		pat := fmt.Sprintf(
+			`(\w+=~?)["'](\^?)(\$\{?%s\}?)(\$?)["']`,
+			regexp.QuoteMeta(name),
+		)
+		re := regexp.MustCompile(pat)
+		expr = re.ReplaceAllStringFunc(expr, func(match string) string {
+			parts := re.FindStringSubmatch(match)
+			if parts == nil {
+				return match
+			}
+			op := parts[1]     // e.g. "namespace=" or "namespace=~"
+			prefix := parts[2] // "^" or ""
+			suffix := parts[4] // "$" or ""
+
+			if strings.HasSuffix(op, "=~") {
+				escaped := escapeRegex(value)
+				if prefix != "" || suffix != "" {
+					return op + `"^` + escaped + `$"`
+				}
+				return op + `"` + escaped + `"`
+			}
+			return op + `"` + value + `"`
+		})
+
+		// Also handle bare (unquoted) variable references: label=$var or label=${var}
+		barePat := fmt.Sprintf(`(\w+=~?)(?:\$\{%s\}|\$%s)([,}\s]|$)`, regexp.QuoteMeta(name), regexp.QuoteMeta(name))
+		bareRe := regexp.MustCompile(barePat)
+		expr = bareRe.ReplaceAllString(expr, `${1}"`+value+`"${2}`)
+	}
+	return expr
+}
+
+var regexMetaChars = regexp.MustCompile(`[.*+?^${}()|[\]\\]`)
+
+func escapeRegex(s string) string {
+	return regexMetaChars.ReplaceAllString(s, `\$0`)
 }
 
 // intervalToSeconds parses Prometheus-style duration (e.g. 5m, 1h) and returns seconds.

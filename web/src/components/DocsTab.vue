@@ -19,7 +19,8 @@ const sanitizationRules = [
   { name: 'Interval', before: 'increase(errors_total[${__interval}])', after: 'increase(errors_total[5m])' },
   { name: 'Range variable', before: 'avg_over_time(cpu_usage[$interval])', after: 'avg_over_time(cpu_usage[5m])' },
   { name: '$__range_s', before: 'increase(errors[$__range_s])', after: 'increase(errors[300])' },
-  { name: 'Variable label filter', before: 'up{job=~"$job", namespace="$namespace"}', after: 'up' },
+  { name: 'Variable bake-in', before: 'up{namespace="$namespace"}', after: 'up{namespace="prod"} (with -v namespace=prod)' },
+  { name: 'Variable strip (no override)', before: 'up{job=~"$job", namespace="$namespace"}', after: 'up' },
   { name: 'Mixed labels', before: 'rate(http_total{method="GET", job=~"$job"}[5m])', after: 'rate(http_total{method="GET"}[5m])' },
   { name: 'Dangling comma', before: 'node_memory{, instance="a"}', after: 'node_memory{instance="a"}' },
   { name: 'Trailing comma', before: 'node_cpu{mode="idle",}', after: 'node_cpu{mode="idle"}' },
@@ -54,7 +55,7 @@ const parsingFeatures = [
 
 const pipelineSteps = [
   { color: 'orange', title: 'Parse', desc: 'Grafana JSON is parsed recursively. Every PromQL expression is extracted from panels, nested rows, collapsed panels, and Grafana 8+ options.queries[]. Legacy rows[] are also supported.' },
-  { color: 'emerald', title: 'Sanitise', desc: 'Grafana-specific template variables ($__rate_interval, $__interval, $__range_s, $job, $node, etc.) are replaced with your chosen interval (default 5m) or removed. Function names are lowercased to match Prometheus conventions.' },
+  { color: 'emerald', title: 'Sanitise', desc: 'Built-in time variables ($__rate_interval, $__interval, $__range_s) are replaced with your chosen interval (default 5m). Template variables ($namespace, $job, etc.) are baked in using Grafana defaults or your overrides — any remaining unknowns are stripped. Function names are lowercased.' },
   { color: 'blue', title: 'Validate', desc: 'Extracted metric names are checked against the SUSE Observability Prometheus API. Prefix detection identifies if your metrics have a namespace prefix (e.g. postgresql_ or mysql_). Counter _total suffixes are handled transparently.' },
   { color: 'teal', title: 'Generate', desc: 'A valid STS dashboard YAML is produced with a Grid layout, TimeSeriesChart panels, PrometheusTimeSeriesQuery queries, and proper panel IDs. The YAML can be applied directly or downloaded.' },
 ]
@@ -84,6 +85,7 @@ const cliCommands = [
       { flag: '-o, --output', desc: 'Output YAML file path (default: <input>.sts.yaml)' },
       { flag: '--name', desc: 'Dashboard name in STS' },
       { flag: '--interval', desc: 'PromQL interval for rate/irate (default: 5m; e.g. 1m, 15m, 1h)' },
+      { flag: '-v, --variable', desc: 'Bake variable value into queries (repeatable, e.g. -v namespace=prod)' },
       { flag: '--include-missing', desc: 'Include panels whose metrics are not in STS' },
       { flag: '--no-rewrite', desc: "Don't rewrite metric names with detected prefix" },
     ],
@@ -113,6 +115,7 @@ const cliCommands = [
       { flag: '--sts-url', desc: 'SUSE Observability base URL' },
       { flag: '--sts-token', desc: 'SUSE Observability API token' },
       { flag: '--interval', desc: 'PromQL interval for rate/irate (default: 5m)' },
+      { flag: '-v, --variable', desc: 'Bake variable value into queries (repeatable, e.g. -v namespace=prod)' },
     ],
   },
   {
@@ -227,6 +230,13 @@ function scrollTo(id) {
               use <code>--interval 5m</code>. Default is <code>5m</code>, which suits typical Prometheus scrape
               intervals (15s–1m).
             </p>
+            <p>
+              <strong>Variable bake-in</strong> — Odyssey parses Grafana's <code>templating.list</code> to extract
+              default values for template variables (e.g. <code>$namespace</code>, <code>$job</code>). These defaults
+              are baked into queries, turning <code>namespace="$namespace"</code> into <code>namespace="prod"</code>.
+              You can override any value via <code>--variable namespace=prod</code> (CLI) or the Variable Overrides
+              section in the Configure step (web UI). Variables without a known value are stripped as before.
+            </p>
           </div>
 
           <h3 class="text-lg font-semibold text-slate-200 mt-8 mb-3">Transformation Rules</h3>
@@ -251,11 +261,12 @@ function scrollTo(id) {
 
           <h3 class="text-lg font-semibold text-slate-200 mt-8 mb-3">Supported Variables</h3>
           <div class="prose-custom">
-            <p>Any Grafana template variable used inside a <strong>label selector</strong> is removed entirely.
-              This covers <code>$job</code>, <code>$namespace</code>, <code>$node</code>, <code>$instance</code>,
-              and any custom variables. Variables inside <strong>range brackets</strong> (<code>[$var]</code>) are
-              replaced with your chosen interval (default <code>5m</code>). <code>$__range_s</code> is replaced
-              with the interval in seconds (e.g. 300 for 5m, 60 for 1m).</p>
+            <p>Grafana template variables in <strong>label selectors</strong> (e.g. <code>$job</code>, <code>$namespace</code>)
+              are handled in two ways: if a default value is found in <code>templating.list</code> or provided via
+              <code>--variable</code>, the value is <strong>baked in</strong>. Otherwise, the selector is <strong>removed</strong>.
+              Variables inside <strong>range brackets</strong> (<code>[$var]</code>) are replaced with your chosen
+              interval (default <code>5m</code>). <code>$__range_s</code> is replaced with the interval in seconds
+              (e.g. 300 for 5m, 60 for 1m).</p>
           </div>
 
           <h3 class="text-lg font-semibold text-slate-200 mt-8 mb-3">Full Example</h3>
@@ -276,7 +287,7 @@ function scrollTo(id) {
             <p class="text-xs text-slate-600">
               Steps applied: (1) SUM/RATE lowercased,
               (2) $__rate_interval replaced with 5m,
-              (3) variable label selectors removed,
+              (3) known variable values baked into label selectors; unknowns removed,
               (4) empty braces cleaned.
             </p>
           </div>

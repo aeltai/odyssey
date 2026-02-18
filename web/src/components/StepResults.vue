@@ -85,6 +85,7 @@ async function checkMetrics() {
         stsUrl: props.config.stsUrl,
         stsToken: props.config.stsToken,
         interval: props.config.interval || '5m',
+        variableOverrides: props.config.variableOverrides || undefined,
       }),
     })
     const data = await resp.json()

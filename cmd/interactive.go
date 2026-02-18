@@ -144,7 +144,7 @@ func runInteractive() error {
 	}
 	fmt.Printf("  STS reports %s\n\n", successStyle.Render(fmt.Sprintf("%d metrics", len(metricIdx.Exact))))
 
-	enriched := engine.SanitiseAndExtract(panels, "5m", os.Stderr)
+	enriched := engine.SanitiseAndExtract(panels, "5m", nil, os.Stderr)
 	results, detectedPrefix := engine.MatchPanels(enriched, metricIdx)
 	matched, missing := engine.CountResults(results)
 
@@ -291,7 +291,7 @@ func interactiveFileParse() ([]grafana.Panel, string, []string, error) {
 		inputs = []string{inputPath}
 	}
 
-	panels, dashTitle, err := engine.ParseInputs(inputs)
+	panels, dashTitle, _, err := engine.ParseInputs(inputs)
 	if err != nil {
 		return nil, "", nil, fmt.Errorf("parse error: %w", err)
 	}

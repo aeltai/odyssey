@@ -9,9 +9,10 @@ Reference for anyone adding new dashboards to Odyssey or fine-tuning conversions
 | Built-in time variables | `[$__rate_interval]`, `[${__interval}]`, `[$__range]` | Replaced with your chosen interval (default `[5m]`) |
 | Custom interval variables | `[$interval]`, `[$resolution]`, `[$__range_s]` | `[$var]` → `[interval]`; `$__range_s` → seconds (e.g. 300 for 5m) |
 | Datasource filtering | Targets with `datasource: {type: "loki"}` etc. | Skipped (only Prometheus panels converted) |
-| Variable label selectors | `instance="$host"`, `job=~"$job"` | Removed entirely |
-| Regex variable selectors | `instance=~"^$Node$"`, `pod=~"$pod.*"` | Removed entirely |
-| Chained variables | `instance=~"$host:$port"` | Removed entirely |
+| Variable label selectors | `instance="$host"`, `job=~"$job"` | Baked with Grafana default or `--variable` override; remaining unknowns removed |
+| Regex variable selectors | `instance=~"^$Node$"`, `pod=~"$pod.*"` | Substituted if value known; otherwise removed |
+| Chained variables | `instance=~"$host:$port"` | Removed if we don't have both values |
+| Template variable parsing | `templating.list` in dashboard JSON | Defaults extracted from `current.value` / `current.text` |
 | Uppercase PromQL functions | `SUM(...)`, `RATE(...)` | Lowercased |
 | Metric namespace prefixes | `pg_up` → `postgresql_pg_up` | Auto-detected and rewritten |
 | Counter `_total` stripping | `commands_total` → `commands` (by agent) | Matched via suffix fallback |

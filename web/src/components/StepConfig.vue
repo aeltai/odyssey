@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, reactive, computed } from 'vue'
 
 const props = defineProps(['parseResult', 'config'])
 const emit = defineEmits(['configured', 'back'])
@@ -12,6 +12,41 @@ const interval = ref(props.config.interval || '5m')
 const rewriteMetrics = ref(props.config.rewriteMetrics ?? true)
 const includeMissing = ref(props.config.includeMissing ?? false)
 const showToken = ref(false)
+const showVarSection = ref(false)
+
+const variableDefaults = props.parseResult?.variableDefaults || {}
+const detectedVarNames = Object.keys(variableDefaults)
+
+const varOverrides = reactive(
+  Object.fromEntries(
+    detectedVarNames.map(k => [k, props.config.variableOverrides?.[k] || variableDefaults[k] || ''])
+  )
+)
+const customVarName = ref('')
+const customVarValue = ref('')
+
+function addCustomVar() {
+  const k = customVarName.value.trim()
+  if (k && !(k in varOverrides)) {
+    varOverrides[k] = customVarValue.value
+    customVarName.value = ''
+    customVarValue.value = ''
+  }
+}
+
+function removeVar(k) {
+  delete varOverrides[k]
+}
+
+const hasVariables = computed(() => detectedVarNames.length > 0 || Object.keys(varOverrides).length > 0)
+
+function buildOverrides() {
+  const result = {}
+  for (const [k, v] of Object.entries(varOverrides)) {
+    if (v) result[k] = v
+  }
+  return Object.keys(result).length > 0 ? result : undefined
+}
 
 function proceed() {
   emit('configured', {
@@ -22,6 +57,7 @@ function proceed() {
     interval: interval.value || '5m',
     rewriteMetrics: rewriteMetrics.value,
     includeMissing: includeMissing.value,
+    variableOverrides: buildOverrides(),
   })
 }
 
@@ -154,6 +190,64 @@ const metricCount = new Set(props.parseResult?.panels?.flatMap(p => p.metrics ||
               <p class="text-[10px] text-slate-600">Keep all panels even if their metrics aren't found in STS</p>
             </div>
           </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Variable overrides -->
+    <div class="bg-slate-800/20 rounded-2xl ring-1 ring-slate-700/40 p-5 space-y-4">
+      <button @click="showVarSection = !showVarSection" class="flex items-center gap-3 w-full text-left">
+        <div class="w-9 h-9 rounded-lg bg-violet-500/15 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <h3 class="text-sm font-semibold text-slate-200">Variable Overrides</h3>
+          <p class="text-xs text-slate-500">
+            <template v-if="detectedVarNames.length > 0">
+              {{ detectedVarNames.length }} variable{{ detectedVarNames.length !== 1 ? 's' : '' }} detected from Grafana templating
+            </template>
+            <template v-else>
+              No template variables detected — add custom overrides if needed
+            </template>
+          </p>
+        </div>
+        <svg :class="['w-4 h-4 text-slate-500 transition-transform', showVarSection ? 'rotate-180' : '']" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+      </button>
+
+      <div v-if="showVarSection" class="space-y-3 pl-12">
+        <p class="text-[10px] text-slate-600">
+          Grafana variables like <code class="text-slate-500">$namespace</code> are baked into queries with the values below. Empty values are stripped.
+        </p>
+
+        <div v-for="k in Object.keys(varOverrides)" :key="k" class="flex items-center gap-2">
+          <span class="text-xs font-mono text-violet-400 w-28 truncate flex-shrink-0" :title="k">${{ k }}</span>
+          <input
+            v-model="varOverrides[k]"
+            type="text"
+            :placeholder="variableDefaults[k] ? 'Default: ' + variableDefaults[k] : 'value'"
+            class="flex-1 bg-slate-900/80 border border-slate-700/80 rounded-lg px-3 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition"
+          />
+          <button v-if="!detectedVarNames.includes(k)" @click="removeVar(k)" class="text-slate-600 hover:text-red-400 transition p-1" title="Remove">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2 pt-1">
+          <input
+            v-model="customVarName"
+            type="text"
+            placeholder="variable name"
+            class="w-28 bg-slate-900/80 border border-slate-700/80 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition font-mono"
+            @keyup.enter="addCustomVar"
+          />
+          <input
+            v-model="customVarValue"
+            type="text"
+            placeholder="value"
+            class="flex-1 bg-slate-900/80 border border-slate-700/80 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition"
+            @keyup.enter="addCustomVar"
+          />
+          <button @click="addCustomVar" class="text-xs text-violet-400 hover:text-violet-300 font-medium px-2 py-1.5 transition">+ Add</button>
         </div>
       </div>
     </div>

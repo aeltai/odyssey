@@ -20,6 +20,7 @@ var convertFlags struct {
 	rewriteMetrics bool
 	dashID         int64
 	interval       string
+	variables      []string
 }
 
 var convertCmd = &cobra.Command{
@@ -36,16 +37,17 @@ STS dashboard YAML file.`,
 			output = base + ".sts.yaml"
 		}
 		opts := engine.Options{
-			Inputs:         args,
-			Output:         output,
-			Name:           convertFlags.name,
-			STSURL:         convertFlags.stsURL,
-			STSToken:       convertFlags.stsToken,
-			MetricPrefix:   convertFlags.metricPrefix,
-			IncludeMissing: convertFlags.includeMissing,
-			RewriteMetrics: convertFlags.rewriteMetrics,
-			DashID:         convertFlags.dashID,
-			Interval:       convertFlags.interval,
+			Inputs:            args,
+			Output:            output,
+			Name:              convertFlags.name,
+			STSURL:            convertFlags.stsURL,
+			STSToken:          convertFlags.stsToken,
+			MetricPrefix:      convertFlags.metricPrefix,
+			IncludeMissing:    convertFlags.includeMissing,
+			RewriteMetrics:    convertFlags.rewriteMetrics,
+			DashID:            convertFlags.dashID,
+			Interval:          convertFlags.interval,
+			VariableOverrides: parseVariableFlags(convertFlags.variables),
 		}
 		_, err := engine.Run(opts, os.Stderr)
 		if err != nil {
@@ -66,4 +68,5 @@ func init() {
 	f.BoolVar(&convertFlags.rewriteMetrics, "rewrite-metrics", true, "Rewrite metric names to match STS prefix")
 	f.Int64Var(&convertFlags.dashID, "id", 0, "Existing STS dashboard ID (for updates)")
 	f.StringVar(&convertFlags.interval, "interval", "5m", "PromQL interval for rate/irate (e.g. 5m, 1m, 15m)")
+	f.StringArrayVarP(&convertFlags.variables, "variable", "v", nil, "Bake variable value into queries (e.g. -v namespace=prod -v job=myjob)")
 }

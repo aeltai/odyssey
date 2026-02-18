@@ -14,6 +14,13 @@ type Panel struct {
 	Source string
 }
 
+// ParseResult holds everything extracted from a Grafana dashboard JSON.
+type ParseResult struct {
+	Title            string
+	Panels           []Panel
+	VariableDefaults map[string]string // variable name -> current/default value from templating.list
+}
+
 type rawPanel struct {
 	Type    string      `json:"type"`
 	Title   string      `json:"title"`
@@ -38,9 +45,21 @@ type rawRow struct {
 }
 
 type rawDashboard struct {
-	Title  string     `json:"title"`
-	Panels []rawPanel `json:"panels"`
-	Rows   []rawRow   `json:"rows"`
+	Title      string        `json:"title"`
+	Panels     []rawPanel    `json:"panels"`
+	Rows       []rawRow      `json:"rows"`
+	Templating rawTemplating `json:"templating"`
+}
+
+type rawTemplating struct {
+	List []rawVariable `json:"list"`
+}
+
+type rawVariable struct {
+	Name    string          `json:"name"`
+	Type    string          `json:"type"`
+	Label   string          `json:"label"`
+	Current json.RawMessage `json:"current"`
 }
 
 // ParseFile reads a Grafana dashboard JSON and returns the dashboard title
@@ -50,25 +69,51 @@ func ParseFile(path string) (string, []Panel, error) {
 	if err != nil {
 		return "", nil, fmt.Errorf("read %s: %w", path, err)
 	}
-	return parseRaw(data, path)
+	r, err := parseRawResult(data, path)
+	if err != nil {
+		return "", nil, err
+	}
+	return r.Title, r.Panels, nil
 }
 
 // ParseBytes parses a Grafana dashboard from raw JSON bytes.
 func ParseBytes(data []byte) (string, []Panel, error) {
-	return parseRaw(data, "upload")
+	r, err := parseRawResult(data, "upload")
+	if err != nil {
+		return "", nil, err
+	}
+	return r.Title, r.Panels, nil
 }
 
-func parseRaw(data []byte, source string) (string, []Panel, error) {
+// ParseFileResult is like ParseFile but returns the full ParseResult including variable defaults.
+func ParseFileResult(path string) (*ParseResult, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("read %s: %w", path, err)
+	}
+	return parseRawResult(data, path)
+}
+
+// ParseBytesResult is like ParseBytes but returns the full ParseResult including variable defaults.
+func ParseBytesResult(data []byte) (*ParseResult, error) {
+	return parseRawResult(data, "upload")
+}
+
+func parseRawResult(data []byte, source string) (*ParseResult, error) {
 	var dash rawDashboard
 	if err := json.Unmarshal(data, &dash); err != nil {
-		return "", nil, fmt.Errorf("parse dashboard JSON: %w", err)
+		return nil, fmt.Errorf("parse dashboard JSON: %w", err)
 	}
 	var panels []Panel
 	walkPanels(dash.Panels, "", source, &panels)
 	for _, row := range dash.Rows {
 		walkPanels(row.Panels, strings.TrimSpace(row.Title), source, &panels)
 	}
-	return dash.Title, panels, nil
+	return &ParseResult{
+		Title:            dash.Title,
+		Panels:           panels,
+		VariableDefaults: extractVariableDefaults(dash),
+	}, nil
 }
 
 func walkPanels(raw []rawPanel, parentTitle, source string, out *[]Panel) {
@@ -132,6 +177,52 @@ func extractExprs(p rawPanel) []string {
 	}
 
 	return exprs
+}
+
+// extractVariableDefaults parses templating.list and returns a map of variable
+// name to its current/default value. Built-in variables (datasource, __*) and
+// variables without a usable current value are skipped.
+func extractVariableDefaults(dash rawDashboard) map[string]string {
+	result := map[string]string{}
+	for _, v := range dash.Templating.List {
+		if v.Type == "datasource" || strings.HasPrefix(v.Name, "__") {
+			continue
+		}
+		if len(v.Current) == 0 {
+			continue
+		}
+		val := parseCurrentValue(v.Current)
+		if val == "" || val == "$__all" || strings.HasPrefix(val, "$__auto") {
+			continue
+		}
+		result[v.Name] = val
+	}
+	if len(result) == 0 {
+		return nil
+	}
+	return result
+}
+
+func parseCurrentValue(raw json.RawMessage) string {
+	var obj struct {
+		Value interface{} `json:"value"`
+		Text  interface{} `json:"text"`
+	}
+	if err := json.Unmarshal(raw, &obj); err != nil {
+		return ""
+	}
+	if s, ok := obj.Value.(string); ok && s != "" {
+		return s
+	}
+	if arr, ok := obj.Value.([]interface{}); ok && len(arr) > 0 {
+		if s, ok := arr[0].(string); ok {
+			return s
+		}
+	}
+	if s, ok := obj.Text.(string); ok && s != "" {
+		return s
+	}
+	return ""
 }
 
 // isPrometheusDatasource returns false if datasource is explicitly non-Prometheus.

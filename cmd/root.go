@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -38,6 +39,24 @@ func init() {
 	rootCmd.AddCommand(pullCmd)
 	rootCmd.AddCommand(applyCmd)
 	rootCmd.AddCommand(versionCmd)
+}
+
+// parseVariableFlags converts ["namespace=prod","job=myjob"] to a map.
+func parseVariableFlags(flags []string) map[string]string {
+	if len(flags) == 0 {
+		return nil
+	}
+	m := make(map[string]string, len(flags))
+	for _, f := range flags {
+		k, v, ok := strings.Cut(f, "=")
+		if ok && k != "" {
+			m[k] = v
+		}
+	}
+	if len(m) == 0 {
+		return nil
+	}
+	return m
 }
 
 var versionCmd = &cobra.Command{

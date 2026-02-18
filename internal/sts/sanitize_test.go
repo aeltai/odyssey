@@ -58,6 +58,84 @@ func TestSanitizePromQL(t *testing.T) {
 	}
 }
 
+func TestSanitizePromQLWithVars(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		vars   map[string]string
+		expect string
+	}{
+		{
+			"substitutes namespace",
+			`node_cpu{namespace="$namespace",mode="idle"}`,
+			map[string]string{"namespace": "prod"},
+			`node_cpu{namespace="prod",mode="idle"}`,
+		},
+		{
+			"substitutes ${namespace}",
+			`node_cpu{namespace="${namespace}"}`,
+			map[string]string{"namespace": "prod"},
+			`node_cpu{namespace="prod"}`,
+		},
+		{
+			"substitutes regex match operator",
+			`container_cpu{namespace=~"$namespace"}`,
+			map[string]string{"namespace": "prod"},
+			`container_cpu{namespace=~"prod"}`,
+		},
+		{
+			"substitutes caret-dollar regex",
+			`container_cpu{host=~"^$host$"}`,
+			map[string]string{"host": "node-1"},
+			`container_cpu{host=~"^node-1$"}`,
+		},
+		{
+			"multiple variables",
+			`up{namespace="$namespace",job="$job"}`,
+			map[string]string{"namespace": "prod", "job": "api-server"},
+			`up{namespace="prod",job="api-server"}`,
+		},
+		{
+			"unknown variable stripped",
+			`up{namespace="$namespace",cluster="$cluster"}`,
+			map[string]string{"namespace": "prod"},
+			`up{namespace="prod"}`,
+		},
+		{
+			"nil vars strips all",
+			`up{namespace="$namespace"}`,
+			nil,
+			`up`,
+		},
+		{
+			"empty vars strips all",
+			`up{namespace="$namespace"}`,
+			map[string]string{},
+			`up`,
+		},
+		{
+			"regex escape special chars in value",
+			`metric{path=~"$path"}`,
+			map[string]string{"path": "/api/v1/users"},
+			`metric{path=~"/api/v1/users"}`,
+		},
+		{
+			"bare variable reference",
+			`metric{env=$env}`,
+			map[string]string{"env": "staging"},
+			`metric{env="staging"}`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := SanitizePromQLWithVars(tt.input, "5m", tt.vars)
+			if got != tt.expect {
+				t.Errorf("SanitizePromQLWithVars(%q, vars)\n  got  %q\n  want %q", tt.input, got, tt.expect)
+			}
+		})
+	}
+}
+
 func TestRewriteMetricPrefix(t *testing.T) {
 	idx := &MetricIndex{
 		Exact: map[string]bool{

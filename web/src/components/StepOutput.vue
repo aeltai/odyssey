@@ -38,6 +38,7 @@ async function convert() {
         interval: props.config.interval || '5m',
         rewriteMetrics: props.config.rewriteMetrics,
         includeMissing: props.config.includeMissing,
+        variableOverrides: props.config.variableOverrides || undefined,
       }),
     })
     const data = await resp.json()

@@ -127,7 +127,7 @@ func TestDashboardSanitization(t *testing.T) {
 			}
 
 			var buf bytes.Buffer
-			enriched := engine.SanitiseAndExtract(panels, "5m", &buf)
+			enriched := engine.SanitiseAndExtract(panels, "5m", nil, &buf)
 
 			warnings := strings.Count(buf.String(), "warn:")
 			if warnings > spec.MaxWarnings {
@@ -171,7 +171,7 @@ func TestDashboardYAMLGeneration(t *testing.T) {
 			}
 
 			var buf bytes.Buffer
-			enriched := engine.SanitiseAndExtract(panels, "5m", &buf)
+			enriched := engine.SanitiseAndExtract(panels, "5m", nil, &buf)
 
 			var inputs []sts.PanelInput
 			for _, ep := range enriched {
@@ -240,7 +240,7 @@ func TestAllDashboardsNoCrash(t *testing.T) {
 		totalPanels += len(panels)
 
 		var buf bytes.Buffer
-		engine.SanitiseAndExtract(panels, "5m", &buf)
+		engine.SanitiseAndExtract(panels, "5m", nil, &buf)
 	}
 
 	t.Logf("Processed %d dashboards, %d total panels — no crashes", len(files), totalPanels)

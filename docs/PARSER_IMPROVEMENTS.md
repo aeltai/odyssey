@@ -85,19 +85,21 @@ Datasource *json.RawMessage `json:"datasource"`
 
 ---
 
-## 5. Variable Label Selector Edge Cases
+## 5. Variable Label Selector Handling
 
-**Current** `varLabelFilter` removes:
-- `job=~"$job"`, `namespace="$namespace"`, `instance="$node"`
+**Current behavior** (`SanitizePromQLWithVars`):
 
-**Possible gaps**:
-- **Multi-value expansion**: `$node` with "All" might become `(a|b|c)` — our filter may leave `(a|b|c)` in place; Prometheus accepts it if the var was substituted at export, but raw `$var` we remove
-- **Nested braces**: `{job="a", instance=~"$instance"}` — we remove the whole selector; might leave `{job="a"}` — good
-- **Variable in regex**: `job=~"$job.*"` — we remove; `job=~"prefix-$job"` — we remove; both correct
-- **Empty result**: Removing all selectors can leave `metric{}` or `metric` — we have `emptyBraces` to clean `{}`
+1. **Bake-in known values**: When Grafana `templating.list` provides a default value or the user passes `--variable name=value`, the value is substituted directly into label selectors:
+   - `namespace="$namespace"` → `namespace="prod"` (with `-v namespace=prod`)
+   - `host=~"^$host$"` → `host=~"^node-1$"` (regex-escaped)
+2. **Strip unknowns**: Remaining `$variable` references with no known value are removed by `varLabelFilter`
+3. **Clean up**: Dangling commas, empty braces, trailing commas are cleaned
 
-**Potential improvement**: More comprehensive regex for variable patterns:
-- `\b\w+=~?["']?(?:\{[^}]*\}|[^"']*\$[^"']*|.*)["']?` — complex; current approach is pragmatic
+**Edge cases**:
+- **Multi-value expansion**: `$node` with "All" → only single-value bake-in is supported; multi-value vars without a chosen value are stripped
+- **Chained variables**: `instance=~"$host:$port"` → stripped if both values aren't available
+- **Nested braces**: `{job="a", instance=~"$instance"}` → `{job="a"}` if no override for `instance`
+- **Variable in regex**: `job=~"$job.*"` → substituted if `job` is known, otherwise stripped
 
 ---
 

@@ -12,17 +12,18 @@ import (
 
 // Options controls the conversion behaviour.
 type Options struct {
-	Inputs         []string
-	Output         string
-	Name           string
-	STSURL         string
-	STSToken       string
-	MetricPrefix   string
-	IncludeMissing bool
-	CheckOnly      bool
-	RewriteMetrics bool
-	DashID         int64
-	Interval       string // PromQL interval for rate/irate (e.g. 5m). Default "5m".
+	Inputs            []string
+	Output            string
+	Name              string
+	STSURL            string
+	STSToken          string
+	MetricPrefix      string
+	IncludeMissing    bool
+	CheckOnly         bool
+	RewriteMetrics    bool
+	DashID            int64
+	Interval          string            // PromQL interval for rate/irate (e.g. 5m). Default "5m".
+	VariableOverrides map[string]string  // User-specified variable overrides (e.g. namespace=prod).
 }
 
 // Result holds the outcome of a conversion run.
@@ -42,32 +43,61 @@ type EnrichedPanel struct {
 	ParseError  bool
 }
 
-// ParseInputs reads all Grafana JSON files and returns panels + the first title found.
-func ParseInputs(paths []string) ([]grafana.Panel, string, error) {
+// ParseInputs reads all Grafana JSON files and returns panels, the first title
+// found, and merged variable defaults from templating.list.
+func ParseInputs(paths []string) ([]grafana.Panel, string, map[string]string, error) {
 	var all []grafana.Panel
 	var title string
+	varDefaults := map[string]string{}
 	for _, p := range paths {
-		t, panels, err := grafana.ParseFile(p)
+		result, err := grafana.ParseFileResult(p)
 		if err != nil {
-			return nil, "", err
+			return nil, "", nil, err
 		}
-		if title == "" && t != "" {
-			title = t
+		if title == "" && result.Title != "" {
+			title = result.Title
 		}
-		all = append(all, panels...)
+		for k, v := range result.VariableDefaults {
+			if _, exists := varDefaults[k]; !exists {
+				varDefaults[k] = v
+			}
+		}
+		all = append(all, result.Panels...)
 	}
-	return all, title, nil
+	if len(varDefaults) == 0 {
+		varDefaults = nil
+	}
+	return all, title, varDefaults, nil
+}
+
+// MergeVars merges Grafana variable defaults with user overrides (overrides win).
+func MergeVars(defaults, overrides map[string]string) map[string]string {
+	if len(defaults) == 0 && len(overrides) == 0 {
+		return nil
+	}
+	merged := make(map[string]string)
+	for k, v := range defaults {
+		merged[k] = v
+	}
+	for k, v := range overrides {
+		merged[k] = v
+	}
+	if len(merged) == 0 {
+		return nil
+	}
+	return merged
 }
 
 // SanitiseAndExtract sanitises expressions and extracts metric names.
 // Warnings are written to w. interval is used for $__interval, $__range_s etc. (default "5m").
-func SanitiseAndExtract(panels []grafana.Panel, interval string, w io.Writer) []EnrichedPanel {
+// vars holds merged variable values to bake into label selectors (nil = strip all).
+func SanitiseAndExtract(panels []grafana.Panel, interval string, vars map[string]string, w io.Writer) []EnrichedPanel {
 	if interval == "" {
 		interval = "5m"
 	}
 	out := make([]EnrichedPanel, 0, len(panels))
 	for _, p := range panels {
-		san := sts.SanitizePromQL(p.Expr, interval)
+		san := sts.SanitizePromQLWithVars(p.Expr, interval, vars)
 		names, err := promql.ExtractMetricNames(san)
 		ep := EnrichedPanel{Panel: p, Sanitized: san}
 		if err != nil {
@@ -151,7 +181,7 @@ func CountResults(results []MatchResult) (int, int) {
 
 // Run executes the full conversion pipeline and returns the result.
 func Run(opts Options, w io.Writer) (*Result, error) {
-	panels, dashTitle, err := ParseInputs(opts.Inputs)
+	panels, dashTitle, varDefaults, err := ParseInputs(opts.Inputs)
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +194,8 @@ func Run(opts Options, w io.Writer) (*Result, error) {
 	if interval == "" {
 		interval = "5m"
 	}
-	enriched := SanitiseAndExtract(panels, interval, w)
+	vars := MergeVars(varDefaults, opts.VariableOverrides)
+	enriched := SanitiseAndExtract(panels, interval, vars, w)
 
 	stsCfg, err := sts.LoadConfig(opts.STSURL, opts.STSToken)
 	if err != nil {

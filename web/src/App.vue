@@ -19,6 +19,7 @@ const config = ref({
   interval: '5m',
   rewriteMetrics: true,
   includeMissing: false,
+  variableOverrides: {},
 })
 const checkResult = ref(null)
 const convertResult = ref(null)
@@ -86,7 +87,7 @@ function reset() {
   checkResult.value = null
   convertResult.value = null
   logs.value = []
-  config.value = { stsUrl: '', stsToken: '', name: '', metricPrefix: '', interval: '5m', rewriteMetrics: true, includeMissing: false }
+  config.value = { stsUrl: '', stsToken: '', name: '', metricPrefix: '', interval: '5m', rewriteMetrics: true, includeMissing: false, variableOverrides: {} }
 }
 </script>
 
@@ -210,7 +211,7 @@ function reset() {
             <span class="px-3 py-1.5 rounded-full bg-slate-800/50 ring-1 ring-slate-700/40 text-slate-400">Configurable Interval</span>
             <span class="px-3 py-1.5 rounded-full bg-slate-800/50 ring-1 ring-slate-700/40 text-slate-400">Metric Prefix Detection</span>
             <span class="px-3 py-1.5 rounded-full bg-slate-800/50 ring-1 ring-slate-700/40 text-slate-400">_total Suffix Handling</span>
-            <span class="px-3 py-1.5 rounded-full bg-slate-800/50 ring-1 ring-slate-700/40 text-slate-400">Variable Replacement</span>
+            <span class="px-3 py-1.5 rounded-full bg-slate-800/50 ring-1 ring-slate-700/40 text-slate-400">Variable Bake-in</span>
             <span class="px-3 py-1.5 rounded-full bg-slate-800/50 ring-1 ring-slate-700/40 text-slate-400">Direct Apply to STS</span>
           </div>
 

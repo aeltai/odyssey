@@ -136,7 +136,7 @@ function reset() {
             <div class="flex items-center justify-center gap-6 mb-6">
               <!-- Grafana -->
               <div class="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center shadow-xl ring-1 ring-slate-700/50 p-3">
-                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v16/icons/grafana.svg" alt="Grafana" class="w-10 h-10" />
+                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v16/icons/grafana.svg" alt="Grafana" class="w-10 h-10 brightness-0 invert" />
               </div>
               <!-- Arrow -->
               <div class="flex items-center gap-2">
@@ -148,7 +148,7 @@ function reset() {
               </div>
               <!-- SUSE Observability -->
               <div class="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center shadow-xl ring-1 ring-slate-700/50 p-3">
-                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v16/icons/suse.svg" alt="SUSE" class="w-10 h-10" />
+                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v16/icons/suse.svg" alt="SUSE" class="w-10 h-10 brightness-0 invert" />
               </div>
             </div>
 
@@ -169,7 +169,7 @@ function reset() {
             >
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-orange-500/15 flex items-center justify-center">
-                  <img src="https://cdn.jsdelivr.net/npm/simple-icons@v16/icons/grafana.svg" alt="Grafana" class="w-5 h-5" />
+                  <img src="https://cdn.jsdelivr.net/npm/simple-icons@v16/icons/grafana.svg" alt="Grafana" class="w-5 h-5 brightness-0 invert opacity-90" />
                 </div>
                 <h3 class="font-semibold text-slate-200 group-hover:text-orange-300 transition-colors">Connect to Grafana</h3>
               </div>
@@ -332,9 +332,9 @@ function reset() {
             <a href="https://github.com/aeltai/odyssey" target="_blank" class="hover:text-slate-400 transition-colors">GitHub</a>
           </div>
           <div class="flex items-center gap-3 text-xs text-slate-600">
-            <img src="https://cdn.jsdelivr.net/npm/simple-icons@v16/icons/grafana.svg" alt="Grafana" class="w-4 h-4 opacity-70" />
+            <img src="https://cdn.jsdelivr.net/npm/simple-icons@v16/icons/grafana.svg" alt="Grafana" class="w-4 h-4 brightness-0 invert opacity-70" />
             <svg class="w-3 h-3 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-            <img src="https://cdn.jsdelivr.net/npm/simple-icons@v16/icons/suse.svg" alt="SUSE" class="w-4 h-4 opacity-70" />
+            <img src="https://cdn.jsdelivr.net/npm/simple-icons@v16/icons/suse.svg" alt="SUSE" class="w-4 h-4 brightness-0 invert opacity-70" />
           </div>
         </div>
       </div>

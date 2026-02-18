@@ -1,0 +1,291 @@
+name: NGINX exporter
+scope: publicDashboard
+dashboard:
+  metadata:
+    project: '{"saveVariables":false}'
+  spec:
+    layouts:
+      - kind: Grid
+        spec:
+          items:
+            - x: 0
+              "y": 0
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/1153d1d5e4e'
+            - x: 8
+              "y": 0
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/ef2b213b191'
+            - x: 16
+              "y": 0
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/f9fcf8c9530'
+            - x: 0
+              "y": 2
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/04fc8806ac6'
+            - x: 8
+              "y": 2
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/38c15bcd1b5'
+            - x: 16
+              "y": 2
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/b331b14f437'
+            - x: 0
+              "y": 4
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/d10d089954c'
+            - x: 8
+              "y": 4
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/065dd4f7ed6'
+    panels:
+      04fc8806ac6:
+        spec:
+          display:
+            name: Active Connections
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: stackstate_nginx_connections_active
+      38c15bcd1b5:
+        spec:
+          display:
+            name: Active Connections
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: stackstate_nginx_connections_reading
+      065dd4f7ed6:
+        spec:
+          display:
+            name: Total requests
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: irate(stackstate_nginx_http_requests[5m])
+      1153d1d5e4e:
+        spec:
+          display:
+            name: NGINX Status for $instance
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: stackstate_nginx_up
+      b331b14f437:
+        spec:
+          display:
+            name: Active Connections
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: stackstate_nginx_connections_waiting
+      d10d089954c:
+        spec:
+          display:
+            name: Active Connections
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: stackstate_nginx_connections_writing
+      ef2b213b191:
+        spec:
+          display:
+            name: Processed connections
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: irate(stackstate_nginx_connections_accepted[5m])
+      f9fcf8c9530:
+        spec:
+          display:
+            name: Processed connections
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: irate(stackstate_nginx_connections_handled[5m])

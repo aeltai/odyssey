@@ -1,0 +1,866 @@
+name: Kubewarden
+scope: publicDashboard
+dashboard:
+  metadata:
+    project: '{"saveVariables":false}'
+  spec:
+    layouts:
+      - kind: Grid
+        spec:
+          items:
+            - x: 0
+              "y": 0
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/4cb24c29af3'
+            - x: 8
+              "y": 0
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/1e220d08988'
+            - x: 16
+              "y": 0
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/4952e0598e8'
+            - x: 0
+              "y": 2
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/b946d6fe886'
+            - x: 8
+              "y": 2
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/cf454aac714'
+            - x: 16
+              "y": 2
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/0900467a1d6'
+            - x: 0
+              "y": 4
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/b69762bf44c'
+            - x: 8
+              "y": 4
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/824a87292ec'
+            - x: 16
+              "y": 4
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/3b86646f621'
+            - x: 0
+              "y": 6
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/44b3b325aae'
+            - x: 8
+              "y": 6
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/f015f58d2a0'
+            - x: 16
+              "y": 6
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/3da9a565d63'
+            - x: 0
+              "y": 8
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/63f76ed52d9'
+            - x: 8
+              "y": 8
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/bef760be12f'
+            - x: 16
+              "y": 8
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/02761f624b1'
+            - x: 0
+              "y": 10
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/c3c21cc6ab9'
+            - x: 8
+              "y": 10
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/def5b75c89f'
+            - x: 16
+              "y": 10
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/227ff398d24'
+            - x: 0
+              "y": 12
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/50a374433cd'
+            - x: 8
+              "y": 12
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/96658aac1a5'
+            - x: 16
+              "y": 12
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/1a354cb0f8d'
+            - x: 0
+              "y": 14
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/156b428ac4f'
+            - x: 8
+              "y": 14
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/a04ef3fd104'
+            - x: 16
+              "y": 14
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/360d1b0bbe2'
+    panels:
+      1a354cb0f8d:
+        spec:
+          display:
+            name: Total accepted requests by $policy_name policy
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: sum(kubewarden_policy_evaluations_total{accepted="true",mutated="false"})
+      1e220d08988:
+        spec:
+          display:
+            name: Request rejection percentage
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: sum(kubewarden_policy_evaluations_total{accepted="false"})*100/sum(kubewarden_policy_evaluations_total)
+      3b86646f621:
+        spec:
+          display:
+            name: Rejected requests rate
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: |-
+                      sum by (accepted) (
+                        rate(kubewarden_policy_evaluations_total{accepted="false"}[5m])
+                      )
+      3da9a565d63:
+        spec:
+          display:
+            name: Policies latency
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: sum(rate(kubewarden_policy_evaluation_latency_milliseconds_bucket[5m])) by (le)
+      4cb24c29af3:
+        spec:
+          display:
+            name: Request accepted with no mutation percentage
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: sum(kubewarden_policy_evaluations_total{accepted="true",mutated="false"})*100/sum(kubewarden_policy_evaluations_total)
+      44b3b325aae:
+        spec:
+          display:
+            name: Mutated requests rate
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: |-
+                      sum by (mutated) (
+                        rate(kubewarden_policy_evaluations_total{mutated="true"}[5m])
+                      )
+      50a374433cd:
+        spec:
+          display:
+            name: $policy_name policy request rejection percentage
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: sum(kubewarden_policy_evaluations_total{accepted="false" })*100/sum(kubewarden_policy_evaluations_total)
+      63f76ed52d9:
+        spec:
+          display:
+            name: 90th percentile evaluation latency
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: histogram_quantile(.90, sum(rate(kubewarden_policy_evaluation_latency_milliseconds_bucket[5m])) by (le))
+      156b428ac4f:
+        spec:
+          display:
+            name: Total rejected requests by  $policy_name policy
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: sum(kubewarden_policy_evaluations_total{accepted="false"})
+      227ff398d24:
+        spec:
+          display:
+            name: $policy_name policy accepted request percentage
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: sum(kubewarden_policy_evaluations_total{accepted="true",mutated="false" })*100/sum(kubewarden_policy_evaluations_total)
+      360d1b0bbe2:
+        spec:
+          display:
+            name: Rate of requests to $policy_name policy
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: |-
+                      sum  (
+                        rate(kubewarden_policy_evaluations_total[5m])
+                      )
+      824a87292ec:
+        spec:
+          display:
+            name: Accepted requests rate
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: |-
+                      sum by (accepted) (
+                        rate(kubewarden_policy_evaluations_total{accepted="true"}[5m])
+                      )
+      02761f624b1:
+        spec:
+          display:
+            name: Pod creation rejections
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: sum(kubewarden_policy_evaluations_total{accepted="false",resource_request_operation="CREATE",resource_kind="Pod"})
+      4952e0598e8:
+        spec:
+          display:
+            name: Request mutation percentage
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: sum(kubewarden_policy_evaluations_total{mutated="true"})*100/sum(kubewarden_policy_evaluations_total)
+      96658aac1a5:
+        spec:
+          display:
+            name: $policy_name policy mutation request  percentage
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: sum(kubewarden_policy_evaluations_total{mutated="true" })*100/sum(kubewarden_policy_evaluations_total{accepted="true"})
+      0900467a1d6:
+        spec:
+          display:
+            name: Total rejected requests
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: sum(kubewarden_policy_evaluations_total{accepted="false"})
+      a04ef3fd104:
+        spec:
+          display:
+            name: Total mutated requests by  $policy_name policy
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: sum(kubewarden_policy_evaluations_total{mutated="true"})
+      b946d6fe886:
+        spec:
+          display:
+            name: Total accepted requests with no mutation
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: sum(kubewarden_policy_evaluations_total{accepted="true",mutated="false"})
+      b69762bf44c:
+        spec:
+          display:
+            name: Request count
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: sum(kubewarden_policy_evaluations_total)
+      bef760be12f:
+        spec:
+          display:
+            name: Pod creation mutations
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: sum(kubewarden_policy_evaluations_total{accepted="true", mutated="true",resource_request_operation="CREATE",resource_kind="Pod"})
+      c3c21cc6ab9:
+        spec:
+          display:
+            name: Policy activations
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: sum(kubewarden_policy_total{policy_status="active"})
+      cf454aac714:
+        spec:
+          display:
+            name: Total mutated requests
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: sum(kubewarden_policy_evaluations_total{accepted="true",mutated="true"})
+      def5b75c89f:
+        spec:
+          display:
+            name: Policies evaluated
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: kubewarden_policy_evaluations_total
+      f015f58d2a0:
+        spec:
+          display:
+            name: Requests rate
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: |-
+                      sum (
+                        rate(kubewarden_policy_evaluations_total[5m])
+                      )

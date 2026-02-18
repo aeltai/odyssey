@@ -1,0 +1,1411 @@
+name: PostgreSQL Database
+scope: publicDashboard
+dashboard:
+  metadata:
+    project: '{"saveVariables":false}'
+  spec:
+    layouts:
+      - kind: Grid
+        spec:
+          items:
+            - x: 0
+              "y": 0
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/eeb65e6811e'
+            - x: 8
+              "y": 0
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/2eaf0e67430'
+            - x: 16
+              "y": 0
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/efe2c7a30f6'
+            - x: 0
+              "y": 2
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/e8e86bf60d1'
+            - x: 8
+              "y": 2
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/04dcedc0bf7'
+            - x: 16
+              "y": 2
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/67f1c3abf32'
+            - x: 0
+              "y": 4
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/d8c2f77b153'
+            - x: 8
+              "y": 4
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/38083acd106'
+            - x: 16
+              "y": 4
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/9be3a99ce14'
+            - x: 0
+              "y": 6
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/f8cc3863738'
+            - x: 8
+              "y": 6
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/ea44a53a814'
+            - x: 16
+              "y": 6
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/88a61fb460a'
+            - x: 0
+              "y": 8
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/95f242c1e58'
+            - x: 8
+              "y": 8
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/a118c443420'
+            - x: 16
+              "y": 8
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/f7e4db2ce36'
+            - x: 0
+              "y": 10
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/94ad52099c7'
+            - x: 8
+              "y": 10
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/55bcd3f4be4'
+            - x: 16
+              "y": 10
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/ab32d25ad6e'
+            - x: 0
+              "y": 12
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/441ecbd2650'
+            - x: 8
+              "y": 12
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/65b9c749492'
+            - x: 16
+              "y": 12
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/9d6ec41dd56'
+            - x: 0
+              "y": 14
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/6e1af125e5a'
+            - x: 8
+              "y": 14
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/af3a31cfd14'
+            - x: 16
+              "y": 14
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/1f067780ff2'
+            - x: 0
+              "y": 16
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/cde3219c532'
+            - x: 8
+              "y": 16
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/d0b9347611d'
+            - x: 16
+              "y": 16
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/477449b9485'
+            - x: 0
+              "y": 18
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/d003c7f632b'
+            - x: 8
+              "y": 18
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/5f4568739e2'
+            - x: 16
+              "y": 18
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/d64f7933549'
+            - x: 0
+              "y": 20
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/7441110b28a'
+            - x: 8
+              "y": 20
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/0931824371e'
+            - x: 16
+              "y": 20
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/42f35b65e92'
+            - x: 0
+              "y": 22
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/9ff1dcecdb1'
+            - x: 8
+              "y": 22
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/1755ca2282e'
+            - x: 16
+              "y": 22
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/890be2c10d4'
+            - x: 0
+              "y": 24
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/0641f63f23b'
+            - x: 8
+              "y": 24
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/e18c72b7c93'
+            - x: 16
+              "y": 24
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/01f3dc3e37d'
+            - x: 0
+              "y": 26
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/969d2cc61cf'
+    panels:
+      1f067780ff2:
+        spec:
+          display:
+            name: Fetch data (SELECT)
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: postgresql_pg_stat_database_tup_fetched != 0
+      01f3dc3e37d:
+        spec:
+          display:
+            name: Checkpoint Stats
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: irate(pg_stat_bgwriter_checkpoint_write_time_total[5m])
+      2eaf0e67430:
+        spec:
+          display:
+            name: Start Time
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: pg_postmaster_start_time_seconds * 1000
+      04dcedc0bf7:
+        spec:
+          display:
+            name: Current update data
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: sum(postgresql_pg_stat_database_tup_updated)
+      5f4568739e2:
+        spec:
+          display:
+            name: Delete data
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: postgresql_pg_stat_database_tup_deleted != 0
+      6e1af125e5a:
+        spec:
+          display:
+            name: Transactions
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: irate(postgresql_pg_stat_database_xact_rollback[5m])
+      9be3a99ce14:
+        spec:
+          display:
+            name: Average Memory Usage
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: avg(rate(postgresql_process_virtual_memory_bytes[5m]))
+      9d6ec41dd56:
+        spec:
+          display:
+            name: Transactions
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: irate(postgresql_pg_stat_database_xact_commit[5m])
+      9ff1dcecdb1:
+        spec:
+          display:
+            name: Buffers (bgwriter)
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: irate(pg_stat_bgwriter_buffers_checkpoint_total[5m])
+      42f35b65e92:
+        spec:
+          display:
+            name: Buffers (bgwriter)
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: irate(pg_stat_bgwriter_buffers_backend_fsync_total[5m])
+      55bcd3f4be4:
+        spec:
+          display:
+            name: Seq Page Cost
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: postgresql_pg_settings_seq_page_cost
+      65b9c749492:
+        spec:
+          display:
+            name: Active sessions
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: postgresql_pg_stat_activity_count{state="active"} !=0
+      67f1c3abf32:
+        spec:
+          display:
+            name: Max Connections
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: postgresql_pg_settings_max_connections
+      88a61fb460a:
+        spec:
+          display:
+            name: Effective Cache
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: postgresql_pg_settings_effective_cache_size_bytes
+      94ad52099c7:
+        spec:
+          display:
+            name: Random Page Cost
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: postgresql_pg_settings_random_page_cost
+      95f242c1e58:
+        spec:
+          display:
+            name: Maintenance Work Mem
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: postgresql_pg_settings_maintenance_work_mem_bytes
+      441ecbd2650:
+        spec:
+          display:
+            name: Max Parallel Workers
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: postgresql_pg_settings_max_parallel_workers
+      0641f63f23b:
+        spec:
+          display:
+            name: Conflicts/Deadlocks
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: irate(postgresql_pg_stat_database_deadlocks[5m])
+      890be2c10d4:
+        spec:
+          display:
+            name: Conflicts/Deadlocks
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: irate(postgresql_pg_stat_database_conflicts[5m])
+      969d2cc61cf:
+        spec:
+          display:
+            name: Checkpoint Stats
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: irate(pg_stat_bgwriter_checkpoint_sync_time_total[5m])
+      1755ca2282e:
+        spec:
+          display:
+            name: Buffers (bgwriter)
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: irate(postgresql_pg_stat_bgwriter_buffers_clean[5m])
+      38083acd106:
+        spec:
+          display:
+            name: Average Memory Usage
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: avg(rate(postgresql_process_resident_memory_bytes[5m]))
+      477449b9485:
+        spec:
+          display:
+            name: Return data
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: postgresql_pg_stat_database_tup_returned != 0
+      7441110b28a:
+        spec:
+          display:
+            name: Buffers (bgwriter)
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: irate(pg_stat_bgwriter_buffers_backend_total[5m])
+      0931824371e:
+        spec:
+          display:
+            name: Buffers (bgwriter)
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: irate(postgresql_pg_stat_bgwriter_buffers_alloc[5m])
+      a118c443420:
+        spec:
+          display:
+            name: Work Mem
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: postgresql_pg_settings_work_mem_bytes
+      ab32d25ad6e:
+        spec:
+          display:
+            name: Max Worker Processes
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: postgresql_pg_settings_max_worker_processes
+      af3a31cfd14:
+        spec:
+          display:
+            name: Update data
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: postgresql_pg_stat_database_tup_updated != 0
+      cde3219c532:
+        spec:
+          display:
+            name: Insert data
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: postgresql_pg_stat_database_tup_inserted != 0
+      d0b9347611d:
+        spec:
+          display:
+            name: Lock tables
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: postgresql_pg_locks_count != 0
+      d003c7f632b:
+        spec:
+          display:
+            name: Idle sessions
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: postgresql_pg_stat_activity_count{state=~"idle|idle in transaction|idle in transaction (aborted)"}
+      d8c2f77b153:
+        spec:
+          display:
+            name: Average CPU Usage
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: avg(rate(postgresql_process_cpu_seconds[5m]) * 1000)
+      d64f7933549:
+        spec:
+          display:
+            name: Cache Hit Rate
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: postgresql_pg_stat_database_blks_hit / (postgresql_pg_stat_database_blks_read + postgresql_pg_stat_database_blks_hit)
+      e8e86bf60d1:
+        spec:
+          display:
+            name: Current insert data
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: sum(postgresql_pg_stat_database_tup_inserted)
+      e18c72b7c93:
+        spec:
+          display:
+            name: Temp File (Bytes)
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: irate(postgresql_pg_stat_database_temp_bytes[5m])
+      ea44a53a814:
+        spec:
+          display:
+            name: Shared Buffers
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: postgresql_pg_settings_shared_buffers_bytes
+      eeb65e6811e:
+        spec:
+          display:
+            name: Version
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: postgresql_pg_static
+      efe2c7a30f6:
+        spec:
+          display:
+            name: Current fetch data
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: sum(postgresql_pg_stat_database_tup_fetched)
+      f7e4db2ce36:
+        spec:
+          display:
+            name: Max WAL Size
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: postgresql_pg_settings_max_wal_size_bytes
+      f8cc3863738:
+        spec:
+          display:
+            name: Open File Descriptors
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: postgresql_process_open_fds

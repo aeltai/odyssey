@@ -1,0 +1,886 @@
+name: MySQL Dashboard
+scope: publicDashboard
+dashboard:
+  metadata:
+    project: '{"saveVariables":false}'
+  spec:
+    layouts:
+      - kind: Grid
+        spec:
+          items:
+            - x: 0
+              "y": 0
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/943f67d9eac'
+            - x: 8
+              "y": 0
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/f4b88a9691b'
+            - x: 16
+              "y": 0
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/e65c12c858e'
+            - x: 0
+              "y": 2
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/4cf738e1b8f'
+            - x: 8
+              "y": 2
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/fb34c649f9d'
+            - x: 16
+              "y": 2
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/a45143e9a47'
+            - x: 0
+              "y": 4
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/e3987284a27'
+            - x: 8
+              "y": 4
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/e9ace39d5be'
+            - x: 16
+              "y": 4
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/111527ef966'
+            - x: 0
+              "y": 6
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/35360392393'
+            - x: 8
+              "y": 6
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/ba4119896bb'
+            - x: 16
+              "y": 6
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/2fb8a52b01c'
+            - x: 0
+              "y": 8
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/9c7d4695804'
+            - x: 8
+              "y": 8
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/c4f8f7d1a1a'
+            - x: 16
+              "y": 8
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/bb53a78b68e'
+            - x: 0
+              "y": 10
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/bb0d46a4723'
+            - x: 8
+              "y": 10
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/a2f8f2e529f'
+            - x: 16
+              "y": 10
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/a8dd9377446'
+            - x: 0
+              "y": 12
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/810c0a1fbaa'
+            - x: 8
+              "y": 12
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/f96bd3ad6b0'
+            - x: 16
+              "y": 12
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/fb1c27a153b'
+            - x: 0
+              "y": 14
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/6196bb94c21'
+            - x: 8
+              "y": 14
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/a000141e355'
+            - x: 16
+              "y": 14
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/8c0322154f2'
+            - x: 0
+              "y": 16
+              width: 8
+              height: 2
+              content:
+                $ref: '#/spec/panels/8fa634fe288'
+    panels:
+      2fb8a52b01c:
+        spec:
+          display:
+            name: Top Command Counters
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: topk(5, increase(mysql_mysql_global_status_commands[1h])>0)
+      4cf738e1b8f:
+        spec:
+          display:
+            name: Current Query/Sec
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: rate(mysql_mysql_global_status_queries[5m]) or irate(mysql_mysql_global_status_queries[5m])
+      8c0322154f2:
+        spec:
+          display:
+            name: MySQL Network Usage Hourly
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: increase(mysql_mysql_global_status_bytes_received[1h])
+      8fa634fe288:
+        spec:
+          display:
+            name: MySQL Network Usage Hourly
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: increase(mysql_mysql_global_status_bytes_sent[1h])
+      9c7d4695804:
+        spec:
+          display:
+            name: MySQL Handlers
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: rate(mysql_mysql_global_status_handlers{handler!~"commit|rollback|savepoint.*|prepare"}[5m]) or irate(mysql_mysql_global_status_handlers{handler!~"commit|rollback|savepoint.*|prepare"}[5m])
+      810c0a1fbaa:
+        spec:
+          display:
+            name: MySQL Internal Memory Overview
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: mysql_global_status_innodb_mem_dictionary
+      943f67d9eac:
+        spec:
+          display:
+            name: Buffer Pool Size of Total RAM
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: (mysql_mysql_global_variables_innodb_buffer_pool_size * 100) / on (instance) node_memory_MemTotal_bytes
+      6196bb94c21:
+        spec:
+          display:
+            name: MySQL Network Traffic
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: rate(mysql_mysql_global_status_bytes_received[5m]) or irate(mysql_mysql_global_status_bytes_received[5m])
+      111527ef966:
+        spec:
+          display:
+            name: MySQL Client Thread Activity
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: "max_over_time(mysql_mysql_global_status_threads_running[5m]) or\r\nmax_over_time(mysql_mysql_global_status_threads_running[5m])"
+      "35360392393":
+        spec:
+          display:
+            name: MySQL Client Thread Activity
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: "avg_over_time(mysql_mysql_global_status_threads_running[5m]) or \r\navg_over_time(mysql_mysql_global_status_threads_running[5m])"
+      a2f8f2e529f:
+        spec:
+          display:
+            name: MySQL Internal Memory Overview
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: mysql_mysql_global_variables_innodb_log_buffer_size
+      a8dd9377446:
+        spec:
+          display:
+            name: MySQL Internal Memory Overview
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: mysql_global_variables_innodb_additional_mem_pool_size
+      a000141e355:
+        spec:
+          display:
+            name: MySQL Network Traffic
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: rate(mysql_mysql_global_status_bytes_sent[5m]) or irate(mysql_mysql_global_status_bytes_sent[5m])
+      a45143e9a47:
+        spec:
+          display:
+            name: Clinets Connections
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: mysql_mysql_global_status_max_used_connections
+      ba4119896bb:
+        spec:
+          display:
+            name: Top Command Counters
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: topk(5, rate(mysql_mysql_global_status_commands[5m])>0) or topk(5, irate(mysql_mysql_global_status_commands[5m])>0)
+      bb0d46a4723:
+        spec:
+          display:
+            name: MySQL Internal Memory Overview
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: node_memory_MemTotal_bytes
+      bb53a78b68e:
+        spec:
+          display:
+            name: MySQL Internal Memory Overview
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: mysql_mysql_global_status_innodb_page_size * on (instance) mysql_mysql_global_status_buffer_pool_pages{state="data"}
+      c4f8f7d1a1a:
+        spec:
+          display:
+            name: MySQL Transaction Handlers
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: rate(mysql_mysql_global_status_handlers{handler=~"commit|rollback|savepoint.*|prepare"}[5m]) or irate(mysql_mysql_global_status_handlers{handler=~"commit|rollback|savepoint.*|prepare"}[5m])
+      e9ace39d5be:
+        spec:
+          display:
+            name: MySQL Client Thread Activity
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: "max_over_time(mysql_mysql_global_status_threads_connected[5m]) or\r\nmax_over_time(mysql_mysql_global_status_threads_connected[5m])"
+      e65c12c858e:
+        spec:
+          display:
+            name: InnoDB Buffer Pool Size
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: mysql_mysql_global_variables_innodb_buffer_pool_size
+      e3987284a27:
+        spec:
+          display:
+            name: Clinets Connections
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: mysql_mysql_global_variables_max_connections
+      f4b88a9691b:
+        spec:
+          display:
+            name: MySQL Uptime
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: mysql_mysql_global_status_uptime
+      f96bd3ad6b0:
+        spec:
+          display:
+            name: MySQL Internal Memory Overview
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: mysql_mysql_global_variables_key_buffer_size
+      fb1c27a153b:
+        spec:
+          display:
+            name: MySQL Internal Memory Overview
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: mysql_global_status_innodb_mem_adaptive_hash
+      fb34c649f9d:
+        spec:
+          display:
+            name: Clinets Connections
+            description: ""
+          plugin:
+            kind: TimeSeriesChart
+            spec:
+              legend:
+                mode: list
+                position: right
+                show: true
+                values: []
+              thresholds:
+                mode: absolute
+                steps: []
+              visual:
+                connectNulls: false
+              yAxis:
+                format:
+                  decimalPlaces: 2
+                show: true
+          queries:
+            - kind: TimeSeriesQuery
+              spec:
+                plugin:
+                  kind: PrometheusTimeSeriesQuery
+                  spec:
+                    query: max(max_over_time(mysql_mysql_global_status_threads_connected[5m])  or mysql_mysql_global_status_threads_connected )

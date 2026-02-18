@@ -1,5 +1,6 @@
 odyssey
 *.sts.yaml
+!examples/verified/*.sts.yaml
 .DS_Store
 
 # Downloaded test dashboards (large; use `make download-testdata`)

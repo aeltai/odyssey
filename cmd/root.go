@@ -35,6 +35,8 @@ func Execute() {
 func init() {
 	rootCmd.AddCommand(convertCmd)
 	rootCmd.AddCommand(checkCmd)
+	rootCmd.AddCommand(pullCmd)
+	rootCmd.AddCommand(applyCmd)
 	rootCmd.AddCommand(versionCmd)
 }
 

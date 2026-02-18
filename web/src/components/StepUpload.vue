@@ -1,9 +1,12 @@
 <script setup>
 import { ref, computed } from 'vue'
 
+const props = defineProps({
+  initialMode: { type: String, default: 'file' },
+})
 const emit = defineEmits(['uploaded'])
 
-const mode = ref('file')
+const mode = ref(props.initialMode)
 const files = ref([])
 const dragging = ref(false)
 const error = ref('')

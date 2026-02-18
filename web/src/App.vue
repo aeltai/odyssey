@@ -8,6 +8,7 @@ import DocsTab from './components/DocsTab.vue'
 
 const view = ref('app')
 const step = ref(0)
+const startMode = ref('file')
 const dashboards = ref([])
 const parseResult = ref(null)
 const config = ref({
@@ -34,7 +35,8 @@ const steps = [
   { num: 4, label: 'Export' },
 ]
 
-function start() {
+function start(mode = 'file') {
+  startMode.value = mode
   step.value = 1
 }
 
@@ -92,12 +94,9 @@ function reset() {
     <!-- Header -->
     <header class="border-b border-slate-800/60 backdrop-blur-sm bg-slate-900/50 sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-6 py-3.5 flex items-center justify-between">
-        <div class="flex items-center gap-3 cursor-pointer" @click="step > 0 ? null : null">
-          <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center font-bold text-slate-900 text-lg shadow-lg shadow-emerald-500/20">O</div>
-          <div>
-            <h1 class="text-lg font-bold tracking-tight leading-tight">Odyssey</h1>
-            <p class="text-[10px] text-slate-500 uppercase tracking-widest leading-tight">Dashboard Migration Tool</p>
-          </div>
+        <div class="flex items-center gap-2 cursor-pointer" @click="view = 'app'; step = 0">
+          <h1 class="text-lg font-bold tracking-tight leading-tight">Odyssey</h1>
+          <span class="text-[10px] text-slate-500 uppercase tracking-widest leading-tight hidden sm:inline">Dashboard Migration</span>
         </div>
         <div class="flex items-center gap-2">
           <button
@@ -132,9 +131,9 @@ function reset() {
     <!-- Landing -->
     <template v-else-if="step === 0">
       <div class="flex-1 flex flex-col items-center justify-center px-6 py-16">
-        <div class="max-w-3xl mx-auto text-center space-y-8">
-          <!-- Hero -->
-          <div class="space-y-4">
+        <div class="max-w-4xl mx-auto text-center space-y-10">
+          <!-- Hero icons -->
+          <div class="space-y-5">
             <div class="flex items-center justify-center gap-6 mb-6">
               <!-- Grafana -->
               <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-xl shadow-orange-500/20">
@@ -158,43 +157,61 @@ function reset() {
               Migrate Grafana Dashboards to SUSE Observability
             </h2>
             <p class="text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
-              Upload your Grafana JSON exports, validate metrics against a live instance, and download production-ready YAML. No manual rewriting needed.
+              Connect directly to your Grafana instance or upload JSON exports. Validate metrics against a live SUSE Observability environment and get production-ready YAML.
             </p>
           </div>
 
-          <!-- Feature cards -->
-          <div class="grid sm:grid-cols-3 gap-4 text-left">
-            <div class="bg-slate-800/30 rounded-2xl ring-1 ring-slate-700/40 p-5 space-y-2">
-              <div class="w-9 h-9 rounded-lg bg-orange-500/15 flex items-center justify-center">
-                <svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+          <!-- Two CTA cards -->
+          <div class="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+            <!-- Connect to Grafana -->
+            <button
+              @click="start('grafana')"
+              class="group bg-slate-800/40 hover:bg-orange-500/10 rounded-2xl ring-1 ring-slate-700/40 hover:ring-orange-500/30 p-6 text-left transition-all duration-200 space-y-3"
+            >
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-orange-500/15 flex items-center justify-center">
+                  <svg class="w-5 h-5 text-orange-400" viewBox="0 0 24 24" fill="currentColor"><path d="M22.687 12.566c-.045-.498-.18-.907-.315-1.316-.045-.136-.09-.317-.135-.453a7.5 7.5 0 00-.27-.725c-.045-.09-.09-.227-.135-.317-.135-.272-.315-.544-.45-.77l-.135-.227c-.045-.045-.045-.09-.09-.136-.36-.498-.77-.952-1.226-1.36l-.09-.09a8.76 8.76 0 00-1.586-1.135c-.135-.09-.315-.136-.45-.227-.18-.09-.315-.18-.495-.272-.18-.09-.36-.136-.54-.227-.135-.045-.315-.136-.45-.18a7.07 7.07 0 00-.586-.18c-.135-.046-.315-.091-.45-.136-.225-.045-.45-.09-.676-.136h-.045C14.983 4.57 14.398 3.3 13.76 2.4c-.044-.045-.044-.09-.09-.136-.134-.18-.314-.362-.449-.498-.09-.09-.18-.136-.27-.227-.09-.045-.135-.09-.225-.136-.045 0-.045-.045-.09-.045-.135-.045-.27-.09-.404-.09-.136 0-.316.045-.45.09-.046 0-.046.045-.091.045-.09.045-.135.09-.225.136-.09.09-.18.136-.27.227-.135.136-.315.317-.45.498-.045.045-.045.09-.09.136-.634.907-1.22 2.17-1.495 3.756h-.045c-.225.045-.45.09-.676.136-.135.045-.315.09-.45.136a7.07 7.07 0 00-.585.18c-.135.044-.316.135-.45.18-.181.09-.361.136-.541.227-.18.09-.315.18-.495.272-.136.09-.316.136-.45.227a8.76 8.76 0 00-1.586 1.134l-.09.09a9.479 9.479 0 00-1.226 1.36c-.045.046-.045.091-.09.136l-.135.227c-.135.226-.316.498-.45.77-.046.09-.09.227-.136.317-.09.227-.18.498-.27.725-.045.136-.09.317-.135.453-.135.409-.27.818-.315 1.316-.045.226-.045.453-.045.68 0 .226 0 .452.045.679.045.498.18.907.315 1.316.045.136.09.317.135.453.09.226.18.498.27.725.046.09.09.226.136.316.135.272.315.544.45.771l.135.226c.045.045.045.09.09.136.36.498.77.952 1.226 1.361l.09.09c.495.453 1.035.816 1.586 1.135.134.09.314.136.45.226.18.091.315.181.495.272.18.09.36.136.54.227.136.045.316.135.45.18.181.091.405.136.586.181.135.045.315.09.45.136.226.045.45.09.676.135h.045c.27 1.587.86 2.85 1.495 3.757.045.045.045.09.09.136.135.18.315.362.45.498.09.09.18.136.27.226.09.045.135.09.225.136.045 0 .045.045.09.045.136.045.27.09.405.09.135 0 .315-.045.45-.09.044 0 .044-.045.09-.045.09-.045.134-.09.224-.136.09-.09.18-.135.27-.226.136-.136.316-.317.45-.498.046-.045.046-.09.091-.136.63-.907 1.22-2.17 1.494-3.757h.046c.225-.045.45-.09.675-.135.136-.045.316-.09.45-.136.181-.045.406-.09.586-.18.135-.046.316-.136.45-.181.18-.09.36-.136.54-.227.181-.09.316-.18.496-.272.135-.09.315-.136.45-.226a8.76 8.76 0 001.585-1.135l.09-.09c.45-.41.866-.863 1.226-1.36.045-.046.045-.091.09-.136l.135-.227c.135-.227.315-.499.45-.771.045-.09.09-.226.135-.316.09-.227.18-.499.27-.725.045-.136.09-.317.135-.453.135-.41.27-.818.315-1.316.045-.227.045-.453.045-.68 0-.226 0-.452-.045-.679zM12 18.43c-3.555 0-6.43-2.875-6.43-6.43S8.445 5.57 12 5.57s6.43 2.875 6.43 6.43-2.875 6.43-6.43 6.43z"/></svg>
+                </div>
+                <h3 class="font-semibold text-slate-200 group-hover:text-orange-300 transition-colors">Connect to Grafana</h3>
               </div>
-              <h3 class="font-semibold text-slate-200">Parse Grafana JSON</h3>
-              <p class="text-sm text-slate-500 leading-relaxed">Extracts every PromQL query from panels, rows, nested layouts, and all common Grafana structures.</p>
-            </div>
-            <div class="bg-slate-800/30 rounded-2xl ring-1 ring-slate-700/40 p-5 space-y-2">
-              <div class="w-9 h-9 rounded-lg bg-emerald-500/15 flex items-center justify-center">
-                <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 12c0 3.072 1.16 5.882 3.066 7.998.08.09.16.178.242.265A11.955 11.955 0 0012 21.044a11.955 11.955 0 005.692-1.78c.082-.088.162-.176.242-.266A12.02 12.02 0 0021 12a12.02 12.02 0 00-.382-3.016z" /></svg>
+              <p class="text-sm text-slate-500 leading-relaxed">
+                Connect to your Grafana instance, browse dashboards, and pull them directly. Requires an API key or service account token.
+              </p>
+              <div class="flex items-center gap-1.5 text-xs text-orange-400/70 font-medium">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                Pull dashboards live
               </div>
-              <h3 class="font-semibold text-slate-200">Validate Metrics</h3>
-              <p class="text-sm text-slate-500 leading-relaxed">Checks which metrics exist in your SUSE Observability instance via the Prometheus API. Auto-detects namespace prefixes.</p>
-            </div>
-            <div class="bg-slate-800/30 rounded-2xl ring-1 ring-slate-700/40 p-5 space-y-2">
-              <div class="w-9 h-9 rounded-lg bg-teal-500/15 flex items-center justify-center">
-                <svg class="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            </button>
+
+            <!-- Upload JSON -->
+            <button
+              @click="start('file')"
+              class="group bg-slate-800/40 hover:bg-emerald-500/10 rounded-2xl ring-1 ring-slate-700/40 hover:ring-emerald-500/30 p-6 text-left transition-all duration-200 space-y-3"
+            >
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center">
+                  <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                </div>
+                <h3 class="font-semibold text-slate-200 group-hover:text-emerald-300 transition-colors">Upload JSON File</h3>
               </div>
-              <h3 class="font-semibold text-slate-200">Export STS YAML</h3>
-              <p class="text-sm text-slate-500 leading-relaxed">Generates ready-to-apply dashboard YAML. Sanitises Grafana variables, rewrites metric names, fixes PromQL casing.</p>
-            </div>
+              <p class="text-sm text-slate-500 leading-relaxed">
+                Upload a Grafana dashboard JSON export. Go to Dashboard, Share, Export, Save to file in Grafana.
+              </p>
+              <div class="flex items-center gap-1.5 text-xs text-emerald-400/70 font-medium">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                Drag &amp; drop or browse
+              </div>
+            </button>
           </div>
 
-          <!-- CTA -->
-          <button
-            @click="start"
-            class="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold bg-emerald-500 hover:bg-emerald-400 text-slate-900 shadow-xl shadow-emerald-500/25 transition-all duration-200 text-sm"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-            Start Migration
-          </button>
+          <!-- Feature pills -->
+          <div class="flex flex-wrap items-center justify-center gap-3 text-xs">
+            <span class="px-3 py-1.5 rounded-full bg-slate-800/50 ring-1 ring-slate-700/40 text-slate-400">PromQL Sanitization</span>
+            <span class="px-3 py-1.5 rounded-full bg-slate-800/50 ring-1 ring-slate-700/40 text-slate-400">Metric Prefix Detection</span>
+            <span class="px-3 py-1.5 rounded-full bg-slate-800/50 ring-1 ring-slate-700/40 text-slate-400">_total Suffix Handling</span>
+            <span class="px-3 py-1.5 rounded-full bg-slate-800/50 ring-1 ring-slate-700/40 text-slate-400">Variable Replacement</span>
+            <span class="px-3 py-1.5 rounded-full bg-slate-800/50 ring-1 ring-slate-700/40 text-slate-400">Direct Apply to STS</span>
+          </div>
 
           <!-- Tested badge -->
           <p class="text-xs text-slate-600">
@@ -239,7 +256,7 @@ function reset() {
           <!-- Main content -->
           <div class="lg:col-span-2">
             <Transition name="fade" mode="out-in">
-              <StepUpload v-if="step === 1" @uploaded="onUploaded" />
+              <StepUpload v-if="step === 1" :initial-mode="startMode" @uploaded="onUploaded" />
               <StepConfig v-else-if="step === 2" :parse-result="parseResult" :config="config" @configured="onConfigured" @back="step = 1" />
               <StepResults v-else-if="step === 3" :dashboards="dashboards" :config="config" @checked="onChecked" @convert="onConvert" @back="step = 2" />
               <StepOutput v-else-if="step === 4" :dashboards="dashboards" :config="config" :check-result="checkResult" @converted="onConverted" @back="step = 3" />

@@ -3,6 +3,10 @@
 Convert Grafana dashboards to [SUSE Observability](https://www.suse.com/products/observability/) (StackState) dashboard YAML — with an interactive wizard or non-interactive CLI.
 
 <p align="center">
+  <a href="https://odyssey-app.salmonforest-bed789e1.westeurope.azurecontainerapps.io/"><img src="https://img.shields.io/badge/Live_Demo-Try_it_now-0f766e?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiPjxwYXRoIGQ9Ik0xOCAxM3Y2YTIgMiAwIDAgMS0yIDJINWEyIDIgMCAwIDEtMi0yVjhhMiAyIDAgMCAxIDItMmg2Ii8+PHBvbHlsaW5lIHBvaW50cz0iMTUgMyAyMSAzIDIxIDkiLz48bGluZSB4MT0iMTAiIHkxPSIxNCIgeDI9IjIxIiB5Mj0iMyIvPjwvc3ZnPg==&logoColor=white" alt="Live Demo" /></a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go&logoColor=white" />
   <img src="https://img.shields.io/badge/License-Apache_2.0-blue" />
 </p>
